@@ -6,17 +6,17 @@
   <title>AHP Multi Expert</title>
   <style>
     :root {
-      --bg: #e7f3ef;
-      --panel: #f9fffd;
-      --panel-strong: #ebfaf5;
-      --ink: #16332c;
-      --muted: #5d746d;
-      --line: #b8d8cd;
-      --accent: #0f766e;
-      --accent-soft: #d7f3ea;
+      --bg: #e8f1fb;
+      --panel: #f8fbff;
+      --panel-strong: #ebf4ff;
+      --ink: #16263d;
+      --muted: #5d6f8c;
+      --line: #bfd2ea;
+      --accent: #1d4ed8;
+      --accent-soft: #dbeafe;
       --ok: #166534;
       --bad: #b91c1c;
-      --shadow: 0 18px 45px rgba(15, 118, 110, 0.12);
+      --shadow: 0 18px 45px rgba(29, 78, 216, 0.12);
       --radius: 22px;
     }
 
@@ -29,9 +29,9 @@
       font-family: Georgia, "Times New Roman", serif;
       color: var(--ink);
       background:
-        radial-gradient(circle at top left, rgba(15, 118, 110, 0.18), transparent 24rem),
-        radial-gradient(circle at bottom right, rgba(8, 145, 178, 0.1), transparent 20rem),
-        linear-gradient(180deg, #f2fbf8 0%, var(--bg) 100%);
+        radial-gradient(circle at top left, rgba(29, 78, 216, 0.18), transparent 24rem),
+        radial-gradient(circle at bottom right, rgba(14, 116, 144, 0.12), transparent 20rem),
+        linear-gradient(180deg, #f4f9ff 0%, var(--bg) 100%);
     }
 
     .shell {
@@ -42,8 +42,8 @@
 
     .hero,
     .card {
-      background: rgba(249, 255, 253, 0.92);
-      border: 1px solid rgba(184, 216, 205, 0.95);
+      background: rgba(248, 251, 255, 0.92);
+      border: 1px solid rgba(191, 210, 234, 0.95);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       backdrop-filter: blur(6px);
@@ -168,6 +168,41 @@
       gap: 10px;
     }
 
+    .tabs-shell {
+      display: grid;
+      gap: 18px;
+    }
+
+    .tabs-nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--muted);
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+      box-shadow: 0 10px 24px rgba(29, 78, 216, 0.18);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
     .hint {
       margin-top: 10px;
       font-size: 0.92rem;
@@ -178,7 +213,7 @@
       border: 1px solid var(--line);
       border-radius: 18px;
       overflow: hidden;
-      background: linear-gradient(180deg, rgba(215, 243, 234, 0.7), rgba(255, 255, 255, 0.95));
+      background: linear-gradient(180deg, rgba(219, 234, 254, 0.75), rgba(255, 255, 255, 0.96));
     }
 
     .expert-head {
@@ -210,7 +245,7 @@
     }
 
     th, td {
-      border-bottom: 1px solid #e0f0ea;
+      border-bottom: 1px solid #dfebf8;
       padding: 10px;
       text-align: center;
     }
@@ -220,13 +255,13 @@
       text-align: left;
       position: sticky;
       left: 0;
-      background: #f7fffc;
+      background: #f7fbff;
     }
 
     th {
       font-size: 0.92rem;
       color: var(--muted);
-      background: #f7fffc;
+      background: #f7fbff;
     }
 
     .matrix-input {
@@ -330,7 +365,7 @@
       padding: 10px 12px;
       border-radius: 12px;
       background: rgba(255, 255, 255, 0.6);
-      border: 1px solid #d8ebe4;
+      border: 1px solid #d7e5f5;
       font-size: 0.92rem;
     }
 
@@ -382,28 +417,41 @@
         <div class="actions" style="margin-top:16px;">
           <button class="btn-primary" id="initBtn">Buat Form Penilaian</button>
           <button class="btn-secondary" id="calcBtn">Hitung Hasil</button>
-          <button class="btn-secondary" id="exportBtn">Export JSON</button>
-          <button class="btn-secondary" id="importBtn">Import JSON</button>
           <button class="btn-secondary" id="pdfBtn">Cetak / Save PDF</button>
           <button class="btn-secondary" id="resetBtn">Reset</button>
         </div>
         <p class="hint">Skala AHP yang dipakai: 1 sampai 9. Sel diagonal selalu 1, dan sisi bawah matriks dihitung otomatis sebagai nilai kebalikan.</p>
       </section>
 
-      <section class="card" id="inputsCard">
+      <section class="card" id="workspaceCard">
         <div class="section-title">
-          <h2>Input Penilaian</h2>
-          <span class="badge">Belum diinisialisasi</span>
+          <h2>Workspace AHP</h2>
+          <span class="badge">Mode interaktif</span>
         </div>
-        <div id="expertsContainer" class="grid"></div>
-      </section>
-
-      <section class="card" id="resultsCard">
-        <div class="section-title">
-          <h2>Hasil Perhitungan</h2>
-          <span class="badge">Belum ada hasil</span>
+        <div class="tabs-shell">
+          <div class="tabs-nav">
+            <button class="tab-btn active" id="tabInputBtn" type="button">Input Penilaian</button>
+            <button class="tab-btn" id="tabResultBtn" type="button">Hasil Perhitungan</button>
+          </div>
+          <div class="tab-panel active" id="inputPanel">
+            <section id="inputsCard">
+              <div class="section-title">
+                <h3>Input Penilaian</h3>
+                <span class="badge">Belum diinisialisasi</span>
+              </div>
+              <div id="expertsContainer" class="grid"></div>
+            </section>
+          </div>
+          <div class="tab-panel" id="resultPanel">
+            <section id="resultsCard">
+              <div class="section-title">
+                <h3>Hasil Perhitungan</h3>
+                <span class="badge">Belum ada hasil</span>
+              </div>
+              <div id="resultsContent" class="small">Klik "Buat Form Penilaian", isi matriks, lalu klik "Hitung Hasil".</div>
+            </section>
+          </div>
         </div>
-        <div id="resultsContent" class="small">Klik "Buat Form Penilaian", isi matriks, lalu klik "Hitung Hasil".</div>
       </section>
     </div>
   </main>
@@ -440,11 +488,23 @@
       criteriaText: document.getElementById("criteriaText"),
       alternativeText: document.getElementById("alternativeText"),
       importArea: document.getElementById("importArea"),
+      tabInputBtn: document.getElementById("tabInputBtn"),
+      tabResultBtn: document.getElementById("tabResultBtn"),
+      inputPanel: document.getElementById("inputPanel"),
+      resultPanel: document.getElementById("resultPanel"),
       expertsContainer: document.getElementById("expertsContainer"),
       resultsContent: document.getElementById("resultsContent"),
       inputsCard: document.getElementById("inputsCard"),
       resultsCard: document.getElementById("resultsCard")
     };
+
+    function switchTab(tabName) {
+      const isInput = tabName === "input";
+      els.tabInputBtn.classList.toggle("active", isInput);
+      els.tabResultBtn.classList.toggle("active", !isInput);
+      els.inputPanel.classList.toggle("active", isInput);
+      els.resultPanel.classList.toggle("active", !isInput);
+    }
 
     function parseList(text, fallback) {
       return text
@@ -557,8 +617,8 @@
       const startY = 24;
 
       ctx.font = "13px Georgia";
-      ctx.fillStyle = "#5d746d";
-      ctx.strokeStyle = "#d8ebe4";
+      ctx.fillStyle = "#5d6f8c";
+      ctx.strokeStyle = "#d7e5f5";
       ctx.lineWidth = 1;
 
       items.forEach((item, index) => {
@@ -566,17 +626,17 @@
         const trackWidth = width - leftPad - rightPad;
         const barWidth = trackWidth * (item.score / maxScore);
 
-        ctx.fillStyle = "#5d746d";
+        ctx.fillStyle = "#5d6f8c";
         ctx.fillText("#" + (index + 1), 12, y + 16);
-        ctx.fillStyle = "#16332c";
+        ctx.fillStyle = "#16263d";
         ctx.fillText(item.name, 38, y + 16);
 
-        ctx.fillStyle = "#d7f3ea";
+        ctx.fillStyle = "#dbeafe";
         ctx.fillRect(leftPad, y, trackWidth, barHeight);
-        ctx.fillStyle = "#0f766e";
+        ctx.fillStyle = "#1d4ed8";
         ctx.fillRect(leftPad, y, barWidth, barHeight);
 
-        ctx.fillStyle = "#16332c";
+        ctx.fillStyle = "#16263d";
         ctx.fillText(formatNumber(item.score * 100, 2) + "%", leftPad + trackWidth + 10, y + 16);
       });
     }
@@ -788,6 +848,7 @@
 
       setBadge(els.resultsCard, "Perhitungan selesai");
       drawRankingChart(payload.ranked);
+      switchTab("result");
     }
 
     function calculate() {
@@ -898,6 +959,7 @@
       setBadge(els.inputsCard, "Belum diinisialisasi");
       setBadge(els.resultsCard, "Belum ada hasil");
       els.importArea.value = "";
+      switchTab("input");
     }
 
     document.getElementById("initBtn").addEventListener("click", () => {
@@ -905,13 +967,14 @@
       renderInputs();
       els.resultsContent.innerHTML = "<p class='small'>Form berhasil dibuat. Isi matriks lalu hitung hasil.</p>";
       setBadge(els.resultsCard, "Menunggu perhitungan");
+      switchTab("input");
     });
 
     document.getElementById("calcBtn").addEventListener("click", calculate);
-    document.getElementById("exportBtn").addEventListener("click", exportJson);
-    document.getElementById("importBtn").addEventListener("click", importJson);
     document.getElementById("pdfBtn").addEventListener("click", () => window.print());
     document.getElementById("resetBtn").addEventListener("click", resetApp);
+    els.tabInputBtn.addEventListener("click", () => switchTab("input"));
+    els.tabResultBtn.addEventListener("click", () => switchTab("result"));
 
     resetApp();
   </script>
