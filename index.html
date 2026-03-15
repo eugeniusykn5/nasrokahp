@@ -273,6 +273,13 @@
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     }
 
+    .results-split {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: 1.2fr 0.8fr;
+      align-items: start;
+    }
+
     .result-box {
       padding: 16px;
       border-radius: 18px;
@@ -297,9 +304,39 @@
       font-size: 0.92rem;
     }
 
+    .chart-card {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: white;
+    }
+
+    .detail-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .mini-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .mini-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid #eadfc6;
+      font-size: 0.92rem;
+    }
+
     @media (max-width: 860px) {
       .grid.cols-2,
-      .grid.cols-3 {
+      .grid.cols-3,
+      .results-split {
         grid-template-columns: 1fr;
       }
 
@@ -446,32 +483,47 @@
       );
     }
 
-    function powerWeights(matrix, iterations = 60) {
+    function normalizeMatrix(matrix) {
       const size = matrix.length;
-      let weights = Array(size).fill(1 / size);
-      for (let step = 0; step < iterations; step += 1) {
-        const next = matrix.map(row =>
-          row.reduce((sum, value, col) => sum + (value * weights[col]), 0)
-        );
-        const total = next.reduce((sum, value) => sum + value, 0) || 1;
-        weights = next.map(value => value / total);
+      const colSums = Array(size).fill(0);
+      for (let col = 0; col < size; col += 1) {
+        for (let row = 0; row < size; row += 1) {
+          colSums[col] += matrix[row][col];
+        }
       }
-      return weights;
+
+      return matrix.map(row =>
+        row.map((value, col) => value / (colSums[col] || 1))
+      );
     }
 
-    function consistencyRatio(matrix) {
+    function averageRows(matrix) {
       const size = matrix.length;
-      if (size <= 2) {
-        return 0;
-      }
-      const weights = powerWeights(matrix);
-      const aw = matrix.map(row =>
+      return matrix.map(row =>
+        row.reduce((sum, value) => sum + value, 0) / (size || 1)
+      );
+    }
+
+    function solveAHP(matrix) {
+      const size = matrix.length;
+      const normalized = normalizeMatrix(matrix);
+      const weights = averageRows(normalized);
+      const weightedSum = matrix.map(row =>
         row.reduce((sum, value, col) => sum + (value * weights[col]), 0)
       );
-      const lambdaMax = aw.reduce((sum, value, index) => sum + (value / (weights[index] || 1e-9)), 0) / size;
-      const ci = (lambdaMax - size) / (size - 1);
+      const lambdaMax = weightedSum.reduce((sum, value, index) =>
+        sum + (value / (weights[index] || 1e-9)), 0
+      ) / size;
+      const ci = size <= 2 ? 0 : (lambdaMax - size) / (size - 1);
       const ri = RI[size] || 1.49;
-      return ri === 0 ? 0 : ci / ri;
+
+      return {
+        normalized,
+        weights,
+        lambdaMax,
+        ci,
+        cr: ri === 0 ? 0 : ci / ri
+      };
     }
 
     function finalScores(criteriaWeights, altWeightsPerCriteria) {
@@ -480,6 +532,54 @@
           sum + (weight * altWeightsPerCriteria[criterionIndex][altIndex]), 0
         )
       );
+    }
+
+    function drawRankingChart(items) {
+      const existing = document.getElementById("rankingChart");
+      if (!existing) {
+        return;
+      }
+      const canvas = existing;
+      const dpr = window.devicePixelRatio || 1;
+      const width = canvas.clientWidth || 640;
+      const rowHeight = 56;
+      const height = Math.max(220, (items.length * rowHeight) + 34);
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.height = height + "px";
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+
+      const maxScore = Math.max(...items.map(item => item.score), 0.0001);
+      const leftPad = 128;
+      const rightPad = 70;
+      const barHeight = 24;
+      const startY = 24;
+
+      ctx.font = "13px Georgia";
+      ctx.fillStyle = "#6b7280";
+      ctx.strokeStyle = "#eadfc6";
+      ctx.lineWidth = 1;
+
+      items.forEach((item, index) => {
+        const y = startY + (index * rowHeight);
+        const trackWidth = width - leftPad - rightPad;
+        const barWidth = trackWidth * (item.score / maxScore);
+
+        ctx.fillStyle = "#6b7280";
+        ctx.fillText("#" + (index + 1), 12, y + 16);
+        ctx.fillStyle = "#1f2937";
+        ctx.fillText(item.name, 38, y + 16);
+
+        ctx.fillStyle = "#f3e4c4";
+        ctx.fillRect(leftPad, y, trackWidth, barHeight);
+        ctx.fillStyle = "#b45309";
+        ctx.fillRect(leftPad, y, barWidth, barHeight);
+
+        ctx.fillStyle = "#1f2937";
+        ctx.fillText(formatNumber(item.score * 100, 2) + "%", leftPad + trackWidth + 10, y + 16);
+      });
     }
 
     function formatNumber(value, digits = 4) {
@@ -625,6 +725,22 @@
         "<div class='result-box'><div class='small'>Peringkat #" + (index + 1) + "</div><strong>" + item.name + "</strong><div>Skor: " + formatNumber(item.score) + "</div></div>"
       ).join("");
 
+      const groupAltHtml = payload.groupAlternativeDetails.map(detail => {
+        const badgeClass = detail.cr < 0.1 ? "ok" : "bad";
+        const weights = detail.weights.map((weight, index) =>
+          "<div class='mini-row'><span>" + state.alternatives[index] + "</span><strong>" + formatNumber(weight) + "</strong></div>"
+        ).join("");
+        return (
+          "<div class='result-box'>" +
+            "<div style='display:flex;justify-content:space-between;gap:12px;align-items:center;'>" +
+              "<strong style='margin:0;'>" + detail.criterion + "</strong>" +
+              "<span class='badge " + badgeClass + "'>CR " + formatNumber(detail.cr * 100, 2) + "%</span>" +
+            "</div>" +
+            "<div class='mini-list'>" + weights + "</div>" +
+          "</div>"
+        );
+      }).join("");
+
       const detailHtml = payload.expertDetails.map(detail => {
         const weights = detail.criteriaWeights.map((weight, index) =>
           "<div class='small'>" + state.criteria[index] + ": <strong>" + formatNumber(weight) + "</strong></div>"
@@ -632,6 +748,10 @@
 
         const finals = detail.final.map((score, index) =>
           "<div class='small'>" + state.alternatives[index] + ": <strong>" + formatNumber(score) + "</strong></div>"
+        ).join("");
+
+        const altCrs = detail.altDetails.map(item =>
+          "<div class='mini-row'><span>" + item.criterion + "</span><strong>CR " + formatNumber(item.cr * 100, 2) + "%</strong></div>"
         ).join("");
 
         const crClass = detail.criteriaCR < 0.1 ? "ok" : "bad";
@@ -643,6 +763,7 @@
             "</div>" +
             "<div style='margin-top:10px'>" + weights + "</div>" +
             "<div style='margin-top:12px'>" + finals + "</div>" +
+            "<div class='mini-list' style='margin-top:12px'>" + altCrs + "</div>" +
           "</div>"
         );
       }).join("");
@@ -650,17 +771,24 @@
       const groupCrClass = payload.criteriaCR < 0.1 ? "ok" : "bad";
       els.resultsContent.innerHTML =
         "<h3>Ranking Akhir</h3>" +
-        "<div class='results-grid' style='margin-top:12px;'>" + rankingHtml + "</div>" +
+        "<div class='results-split' style='margin-top:12px;'>" +
+          "<div class='chart-card'><canvas id='rankingChart' style='width:100%;display:block;'></canvas></div>" +
+          "<div class='detail-stack'>" + rankingHtml + "</div>" +
+        "</div>" +
         "<h3 style='margin-top:22px;'>Bobot Kriteria Grup</h3>" +
         "<div class='results-grid' style='margin-top:12px;'>" + criteriaWeightsHtml + "</div>" +
         "<div style='margin-top:22px;'>" +
           "<span class='badge " + groupCrClass + "'>CR Grup " + formatNumber(payload.criteriaCR * 100, 2) + "%</span>" +
+          "<p class='footer-note'>Lambda max: " + formatNumber(payload.lambdaMax) + " | CI: " + formatNumber(payload.ci) + "</p>" +
           "<p class='footer-note'>Hasil dinilai konsisten bila CR kurang dari 10%.</p>" +
         "</div>" +
+        "<h3 style='margin-top:22px;'>Bobot Alternatif Grup per Kriteria</h3>" +
+        "<div class='grid' style='margin-top:12px;'>" + groupAltHtml + "</div>" +
         "<h3 style='margin-top:22px;'>Detail Tiap Expert</h3>" +
         "<div class='grid' style='margin-top:12px;'>" + detailHtml + "</div>";
 
       setBadge(els.resultsCard, "Perhitungan selesai");
+      drawRankingChart(payload.ranked);
     }
 
     function calculate() {
@@ -670,24 +798,40 @@
       }
 
       const criteriaGroupMatrix = aggregateMatrices(state.experts.map(expert => expert.criteriaMatrix));
-      const criteriaWeights = powerWeights(criteriaGroupMatrix);
-      const criteriaCR = consistencyRatio(criteriaGroupMatrix);
+      const criteriaSolution = solveAHP(criteriaGroupMatrix);
 
-      const altGroupMatrices = state.criteria.map((_, criterionIndex) =>
-        aggregateMatrices(state.experts.map(expert => expert.alternativeMatrices[criterionIndex]))
-      );
-      const altWeightsPerCriteria = altGroupMatrices.map(matrix => powerWeights(matrix));
-      const scores = finalScores(criteriaWeights, altWeightsPerCriteria);
+      const groupAlternativeDetails = state.criteria.map((criterion, criterionIndex) => {
+        const matrix = aggregateMatrices(state.experts.map(expert => expert.alternativeMatrices[criterionIndex]));
+        const solution = solveAHP(matrix);
+        return {
+          criterion,
+          matrix,
+          weights: solution.weights,
+          cr: solution.cr,
+          lambdaMax: solution.lambdaMax
+        };
+      });
+
+      const altWeightsPerCriteria = groupAlternativeDetails.map(detail => detail.weights);
+      const scores = finalScores(criteriaSolution.weights, altWeightsPerCriteria);
 
       const expertDetails = state.experts.map(expert => {
-        const ownCriteriaWeights = powerWeights(expert.criteriaMatrix);
-        const ownCriteriaCR = consistencyRatio(expert.criteriaMatrix);
-        const ownAltWeights = expert.alternativeMatrices.map(matrix => powerWeights(matrix));
+        const ownCriteriaSolution = solveAHP(expert.criteriaMatrix);
+        const ownAltDetails = expert.alternativeMatrices.map((matrix, criterionIndex) => {
+          const solution = solveAHP(matrix);
+          return {
+            criterion: state.criteria[criterionIndex],
+            weights: solution.weights,
+            cr: solution.cr,
+            lambdaMax: solution.lambdaMax
+          };
+        });
         return {
           name: expert.name,
-          criteriaWeights: ownCriteriaWeights,
-          criteriaCR: ownCriteriaCR,
-          final: finalScores(ownCriteriaWeights, ownAltWeights)
+          criteriaWeights: ownCriteriaSolution.weights,
+          criteriaCR: ownCriteriaSolution.cr,
+          final: finalScores(ownCriteriaSolution.weights, ownAltDetails.map(detail => detail.weights)),
+          altDetails: ownAltDetails
         };
       });
 
@@ -696,10 +840,13 @@
         .sort((left, right) => right.score - left.score);
 
       renderResults({
-        criteriaWeights,
-        criteriaCR,
+        criteriaWeights: criteriaSolution.weights,
+        criteriaCR: criteriaSolution.cr,
+        lambdaMax: criteriaSolution.lambdaMax,
+        ci: criteriaSolution.ci,
         ranked,
-        expertDetails
+        expertDetails,
+        groupAlternativeDetails
       });
     }
 
