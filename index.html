@@ -73,6 +73,12 @@
 
     button:hover { filter: brightness(0.95); }
 
+    .btn-secondary {
+      background: #edf6f1;
+      color: #17553a;
+      border: 1px solid #bcd8c9;
+    }
+
     .matrix-wrap {
       overflow-x: auto;
       border: 1px solid var(--line);
@@ -217,6 +223,91 @@
     .tab-panel.active {
       display: block;
     }
+
+    .hierarchy-viz {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #f8fbfa;
+      padding: 14px;
+      overflow-x: auto;
+    }
+
+    .hierarchy-board {
+      min-width: 760px;
+      position: relative;
+      display: grid;
+      gap: 16px;
+      z-index: 1;
+    }
+
+    .hier-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 2;
+    }
+
+    .hier-node {
+      border: 2px solid #2e7d57;
+      border-radius: 14px;
+      background: #ffffff;
+      padding: 10px 14px;
+      min-width: 150px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(22, 106, 69, 0.08);
+    }
+
+    .hier-node.goal {
+      min-width: 320px;
+      border-color: #bc6a3e;
+      background: #fff7f2;
+    }
+
+    .hier-node.criteria {
+      border-color: #2f6fb6;
+      background: #f2f8ff;
+    }
+
+    .hier-node.alt {
+      border-color: #608f3c;
+      background: #f6fbf1;
+    }
+
+    .hier-node.alt.top {
+      border-color: #2d7b2d;
+      background: #eef8ea;
+    }
+
+    .node-title {
+      font-weight: 700;
+      color: #183526;
+      margin-bottom: 4px;
+    }
+
+    .node-sub {
+      font-size: 0.86rem;
+      color: #37624c;
+    }
+
+    .hier-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .stage-label {
+      font-size: 0.8rem;
+      color: #4d6054;
+      font-weight: 700;
+      text-align: left;
+      margin-left: 4px;
+    }
   </style>
 </head>
 <body>
@@ -229,6 +320,10 @@
     <div class="card">
       <h2>1) Konfigurasi</h2>
       <div class="grid">
+        <div>
+          <label for="goalName">Goal / Tujuan</label>
+          <input id="goalName" type="text" value="Memilih Alternatif Terbaik" />
+        </div>
         <div>
           <label for="expertCount">Jumlah expert (1-10)</label>
           <input id="expertCount" type="number" min="1" max="10" value="2" />
@@ -245,6 +340,15 @@
       <div style="margin-top:10px;">
         <button id="generateBtn">Buat Form AHP</button>
       </div>
+      <div class="grid" style="margin-top:10px;">
+        <div>
+          <button id="downloadCsvBtn" class="btn-secondary" type="button">Simpan Input ke CSV</button>
+        </div>
+        <div>
+          <button id="uploadCsvBtn" class="btn-secondary" type="button">Upload Data CSV</button>
+          <input id="uploadCsvInput" type="file" accept=".csv,text/csv" style="display:none;" />
+        </div>
+      </div>
     </div>
 
     <div id="expertSection" class="card" style="display:none;"></div>
@@ -259,6 +363,7 @@
     };
 
     const state = {
+      goal: "",
       nCriteria: 0,
       nAlternatives: 0,
       nExperts: 0,
@@ -267,6 +372,9 @@
     };
 
     const generateBtn = document.getElementById("generateBtn");
+    const downloadCsvBtn = document.getElementById("downloadCsvBtn");
+    const uploadCsvBtn = document.getElementById("uploadCsvBtn");
+    const uploadCsvInput = document.getElementById("uploadCsvInput");
     const expertSection = document.getElementById("expertSection");
     const scoreSection = document.getElementById("scoreSection");
     const resultSection = document.getElementById("resultSection");
@@ -338,6 +446,299 @@
 
       setActive(tabButtons[0].dataset.target);
     }
+
+    function csvEscape(value) {
+      const s = String(value ?? "");
+      if (/[\",\\n]/.test(s)) return `"${s.replace(/\"/g, "\"\"")}"`;
+      return s;
+    }
+
+    function toCsvLine(values) {
+      return values.map(csvEscape).join(",");
+    }
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let field = "";
+      let i = 0;
+      let inQuotes = false;
+
+      while (i < text.length) {
+        const ch = text[i];
+        const next = text[i + 1];
+
+        if (inQuotes) {
+          if (ch === "\"" && next === "\"") {
+            field += "\"";
+            i += 2;
+            continue;
+          }
+          if (ch === "\"") {
+            inQuotes = false;
+            i += 1;
+            continue;
+          }
+          field += ch;
+          i += 1;
+          continue;
+        }
+
+        if (ch === "\"") {
+          inQuotes = true;
+          i += 1;
+          continue;
+        }
+        if (ch === ",") {
+          row.push(field);
+          field = "";
+          i += 1;
+          continue;
+        }
+        if (ch === "\n" || ch === "\r") {
+          if (ch === "\r" && next === "\n") i += 1;
+          row.push(field);
+          if (row.some(x => String(x).trim() !== "")) rows.push(row);
+          row = [];
+          field = "";
+          i += 1;
+          continue;
+        }
+
+        field += ch;
+        i += 1;
+      }
+
+      row.push(field);
+      if (row.some(x => String(x).trim() !== "")) rows.push(row);
+      return rows;
+    }
+
+    function collectDataForCsv() {
+      const goal = String(document.getElementById("goalName").value || "").trim() || "Memilih Alternatif Terbaik";
+      const nExperts = Number(document.getElementById("expertCount").value) || state.nExperts;
+      const criteria = parseNames(document.getElementById("criteriaNames").value);
+      const alternatives = parseNames(document.getElementById("alternativeNames").value);
+
+      if (!criteria.length || !alternatives.length || !nExperts) {
+        throw new Error("Konfigurasi belum lengkap.");
+      }
+
+      const lines = [];
+      lines.push(toCsvLine(["AHP_MULTI_EXPERT", "1"]));
+      lines.push(toCsvLine(["GOAL", goal]));
+      lines.push(toCsvLine(["EXPERTS", nExperts]));
+      lines.push(toCsvLine(["CRITERIA", ...criteria]));
+      lines.push(toCsvLine(["ALTERNATIVES", ...alternatives]));
+
+      for (let ex = 0; ex < nExperts; ex++) {
+        for (let i = 0; i < criteria.length; i++) {
+          for (let j = i + 1; j < criteria.length; j++) {
+            const input = document.querySelector(`input[data-matrix='criteria-ex${ex}'][data-i='${i}'][data-j='${j}']`);
+            const value = input ? input.value : "1";
+            lines.push(toCsvLine(["CRITERIA_PAIR", ex, i, j, value]));
+          }
+        }
+      }
+
+      for (let ex = 0; ex < nExperts; ex++) {
+        for (let c = 0; c < criteria.length; c++) {
+          for (let i = 0; i < alternatives.length; i++) {
+            for (let j = i + 1; j < alternatives.length; j++) {
+              const input = document.querySelector(`input[data-matrix='alt-c${c}-ex${ex}'][data-i='${i}'][data-j='${j}']`);
+              const value = input ? input.value : "1";
+              lines.push(toCsvLine(["ALT_PAIR", ex, c, i, j, value]));
+            }
+          }
+        }
+      }
+
+      return lines.join("\n");
+    }
+
+    function downloadCsv() {
+      try {
+        const csv = collectDataForCsv();
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const goalRaw = String(document.getElementById("goalName").value || "").trim() || "goal";
+        const goalSafe = goalRaw
+          .replace(/\s+/g, "_")
+          .replace(/[^a-zA-Z0-9_-]/g, "")
+          .replace(/_+/g, "_")
+          .replace(/^_+|_+$/g, "") || "goal";
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2, "0");
+        const mm = String(now.getMinutes()).padStart(2, "0");
+        const ss = String(now.getSeconds()).padStart(2, "0");
+        const fileName = `${goalSafe}_${hh}${mm}${ss}.csv`;
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        alert(`Gagal membuat CSV: ${err.message}`);
+      }
+    }
+
+    function applyPairValue(matrixKey, i, j, value) {
+      const input = document.querySelector(`input[data-matrix='${matrixKey}'][data-i='${i}'][data-j='${j}']`);
+      if (!input) return;
+      input.value = value;
+      syncMirrorCell(matrixKey, Number(i), Number(j), parsePairValue(value));
+    }
+
+    function importCsvText(text) {
+      const rows = parseCsv(text);
+      if (!rows.length) throw new Error("File CSV kosong.");
+
+      const first = rows[0];
+      if (first[0] !== "AHP_MULTI_EXPERT") {
+        throw new Error("Format CSV tidak dikenali.");
+      }
+
+      let goal = "Memilih Alternatif Terbaik";
+      let experts = 0;
+      let criteria = [];
+      let alternatives = [];
+      const criteriaPairs = [];
+      const altPairs = [];
+
+      rows.slice(1).forEach(cols => {
+        const tag = cols[0];
+        if (tag === "GOAL") goal = cols[1] || goal;
+        else if (tag === "EXPERTS") experts = Number(cols[1] || 0);
+        else if (tag === "CRITERIA") criteria = cols.slice(1).filter(Boolean);
+        else if (tag === "ALTERNATIVES") alternatives = cols.slice(1).filter(Boolean);
+        else if (tag === "CRITERIA_PAIR") criteriaPairs.push(cols);
+        else if (tag === "ALT_PAIR") altPairs.push(cols);
+      });
+
+      if (!experts || criteria.length < 2 || alternatives.length < 2) {
+        throw new Error("Data konfigurasi CSV tidak valid.");
+      }
+
+      document.getElementById("goalName").value = goal;
+      document.getElementById("expertCount").value = String(experts);
+      document.getElementById("criteriaNames").value = criteria.join(",");
+      document.getElementById("alternativeNames").value = alternatives.join(",");
+
+      generateForms();
+
+      criteriaPairs.forEach(cols => {
+        const ex = Number(cols[1]);
+        const i = Number(cols[2]);
+        const j = Number(cols[3]);
+        const v = cols[4] ?? "1";
+        applyPairValue(`criteria-ex${ex}`, i, j, v);
+      });
+
+      altPairs.forEach(cols => {
+        const ex = Number(cols[1]);
+        const c = Number(cols[2]);
+        const i = Number(cols[3]);
+        const j = Number(cols[4]);
+        const v = cols[5] ?? "1";
+        applyPairValue(`alt-c${c}-ex${ex}`, i, j, v);
+      });
+    }
+
+    function nodePoint(el, parentRect, pointType) {
+      const r = el.getBoundingClientRect();
+      const cx = r.left - parentRect.left + (r.width / 2);
+      const top = r.top - parentRect.top;
+      const bottom = top + r.height;
+      return pointType === "top" ? { x: cx, y: top } : { x: cx, y: bottom };
+    }
+
+    function buildHierarchyLines(container) {
+      const board = container.querySelector(".hierarchy-board");
+      const svg = container.querySelector(".hier-svg");
+      if (!board || !svg) return;
+
+      const boardRect = board.getBoundingClientRect();
+      svg.setAttribute("viewBox", `0 0 ${Math.ceil(boardRect.width)} ${Math.ceil(boardRect.height)}`);
+      svg.innerHTML = "";
+
+      const goalNode = board.querySelector("[data-node='goal']");
+      const criteriaNodes = Array.from(board.querySelectorAll("[data-node^='crit-']"));
+      const altNodes = Array.from(board.querySelectorAll("[data-node^='alt-']"));
+      if (!goalNode || !criteriaNodes.length || !altNodes.length) return;
+
+      const goalBottom = nodePoint(goalNode, boardRect, "bottom");
+
+      criteriaNodes.forEach(cNode => {
+        const cTop = nodePoint(cNode, boardRect, "top");
+        const cBottom = nodePoint(cNode, boardRect, "bottom");
+        const l1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        l1.setAttribute("x1", goalBottom.x);
+        l1.setAttribute("y1", goalBottom.y);
+        l1.setAttribute("x2", cTop.x);
+        l1.setAttribute("y2", cTop.y);
+        l1.setAttribute("stroke", "#9aa5a0");
+        l1.setAttribute("stroke-width", "1.5");
+        svg.appendChild(l1);
+
+        altNodes.forEach(aNode => {
+          const aTop = nodePoint(aNode, boardRect, "top");
+          const l2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          l2.setAttribute("x1", cBottom.x);
+          l2.setAttribute("y1", cBottom.y);
+          l2.setAttribute("x2", aTop.x);
+          l2.setAttribute("y2", aTop.y);
+          l2.setAttribute("stroke", "#d0d6d3");
+          l2.setAttribute("stroke-width", "1.2");
+          svg.appendChild(l2);
+        });
+      });
+    }
+
+    function renderHierarchyViz(criteriaWeights, finalScores) {
+      const target = document.getElementById("hierarchyViz");
+      if (!target) return;
+      const topScore = Math.max(...finalScores, 0);
+
+      const critHtml = state.criteria.map((name, idx) => `
+        <div class='hier-node criteria' data-node='crit-${idx}'>
+          <div class='node-title'>${name}</div>
+          <div class='node-sub'>${fmtPct(criteriaWeights[idx])}</div>
+        </div>
+      `).join("");
+
+      const altHtml = state.alternatives.map((name, idx) => `
+        <div class='hier-node alt ${finalScores[idx] === topScore ? "top" : ""}' data-node='alt-${idx}'>
+          <div class='node-title'>${name}</div>
+          <div class='node-sub'>${fmtPct(finalScores[idx])}</div>
+        </div>
+      `).join("");
+
+      target.innerHTML = `
+        <div class='hierarchy-board'>
+          <svg class='hier-svg'></svg>
+          <div class='stage-label'>Goal</div>
+          <div class='hier-row'>
+            <div class='hier-node goal' data-node='goal'>
+              <div class='node-title'>${state.goal}</div>
+              <div class='node-sub'>AHP Multi-Expert Decision</div>
+            </div>
+          </div>
+          <div class='stage-label'>Criteria</div>
+          <div class='hier-row'>${critHtml}</div>
+          <div class='stage-label'>Alternatives</div>
+          <div class='hier-row'>${altHtml}</div>
+        </div>
+      `;
+
+      requestAnimationFrame(() => buildHierarchyLines(target));
+    }
+
+    window.addEventListener("resize", () => {
+      const target = document.getElementById("hierarchyViz");
+      if (target) requestAnimationFrame(() => buildHierarchyLines(target));
+    });
 
     function buildMatrixTable(matrixKey, names, firstColLabel) {
       const n = names.length;
@@ -440,6 +841,7 @@
     }
 
     function generateForms() {
+      const goal = String(document.getElementById("goalName").value || "").trim();
       const nExperts = Number(document.getElementById("expertCount").value);
       const criteria = parseNames(document.getElementById("criteriaNames").value);
       const alternatives = parseNames(document.getElementById("alternativeNames").value);
@@ -461,6 +863,7 @@
         return;
       }
 
+      state.goal = goal || "Memilih Alternatif Terbaik";
       state.nCriteria = nCriteria;
       state.nAlternatives = nAlternatives;
       state.nExperts = nExperts;
@@ -582,6 +985,8 @@
         html += `<tr><td>${idx + 1}</td><td>${item.name}</td><td>${fmt(item.score)}</td><td>${fmtPct(item.score)}</td></tr>`;
       });
       html += `</tbody></table></div></div>`;
+
+      html += `<div class='result-box'><h3>Visualisasi Hierarki AHP</h3><div id='hierarchyViz' class='hierarchy-viz'></div></div>`;
 
       html += `<div class='result-box'><h3>Hasil Agregasi Multi-Expert</h3>`;
       html += `<p><strong>Priorities by criterion (Agregasi)</strong></p>`;
@@ -720,10 +1125,26 @@
 
       resultSection.innerHTML = html;
       initExpertTabs();
+      renderHierarchyViz(aggCriteriaResult.weights, finalScores);
       resultSection.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     generateBtn.addEventListener("click", generateForms);
+    downloadCsvBtn.addEventListener("click", downloadCsv);
+    uploadCsvBtn.addEventListener("click", () => uploadCsvInput.click());
+    uploadCsvInput.addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        importCsvText(text);
+        alert("Data CSV berhasil dimuat.");
+      } catch (err) {
+        alert(`Gagal membaca CSV: ${err.message}`);
+      } finally {
+        uploadCsvInput.value = "";
+      }
+    });
     generateForms();
   </script>
 </body>
