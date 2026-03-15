@@ -352,6 +352,26 @@
       gap: 12px;
     }
 
+    .expert-summary {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 14px;
+    }
+
+    .expert-block {
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .expert-block h4 {
+      margin: 0 0 10px;
+      font-size: 0.96rem;
+      color: var(--accent);
+    }
+
     .mini-list {
       display: grid;
       gap: 8px;
@@ -372,7 +392,8 @@
     @media (max-width: 860px) {
       .grid.cols-2,
       .grid.cols-3,
-      .results-split {
+      .results-split,
+      .expert-summary {
         grid-template-columns: 1fr;
       }
 
@@ -802,11 +823,11 @@
 
       const detailHtml = payload.expertDetails.map(detail => {
         const weights = detail.criteriaWeights.map((weight, index) =>
-          "<div class='small'>" + state.criteria[index] + ": <strong>" + formatNumber(weight) + "</strong></div>"
+          "<div class='mini-row'><span>" + state.criteria[index] + "</span><strong>" + formatNumber(weight) + "</strong></div>"
         ).join("");
 
         const finals = detail.final.map((score, index) =>
-          "<div class='small'>" + state.alternatives[index] + ": <strong>" + formatNumber(score) + "</strong></div>"
+          "<div class='mini-row'><span>" + state.alternatives[index] + "</span><strong>" + formatNumber(score) + "</strong></div>"
         ).join("");
 
         const altCrs = detail.altDetails.map(item =>
@@ -820,9 +841,20 @@
               "<strong style='margin:0;'>" + detail.name + "</strong>" +
               "<span class='badge " + crClass + "'>CR " + formatNumber(detail.criteriaCR * 100, 2) + "%</span>" +
             "</div>" +
-            "<div style='margin-top:10px'>" + weights + "</div>" +
-            "<div style='margin-top:12px'>" + finals + "</div>" +
-            "<div class='mini-list' style='margin-top:12px'>" + altCrs + "</div>" +
+            "<div class='expert-summary'>" +
+              "<div class='expert-block'>" +
+                "<h4>Bobot Kriteria</h4>" +
+                "<div class='mini-list' style='margin-top:0'>" + weights + "</div>" +
+              "</div>" +
+              "<div class='expert-block'>" +
+                "<h4>Skor Alternatif</h4>" +
+                "<div class='mini-list' style='margin-top:0'>" + finals + "</div>" +
+              "</div>" +
+              "<div class='expert-block'>" +
+                "<h4>CR Alternatif per Kriteria</h4>" +
+                "<div class='mini-list' style='margin-top:0'>" + altCrs + "</div>" +
+              "</div>" +
+            "</div>" +
           "</div>"
         );
       }).join("");
