@@ -6,17 +6,17 @@
   <title>AHP Multi Expert</title>
   <style>
     :root {
-      --bg: #f3efe6;
-      --panel: #fffdf8;
-      --panel-strong: #fff8ea;
-      --ink: #1f2937;
-      --muted: #6b7280;
-      --line: #dccfb2;
-      --accent: #b45309;
-      --accent-soft: #fde7c1;
+      --bg: #e7f3ef;
+      --panel: #f9fffd;
+      --panel-strong: #ebfaf5;
+      --ink: #16332c;
+      --muted: #5d746d;
+      --line: #b8d8cd;
+      --accent: #0f766e;
+      --accent-soft: #d7f3ea;
       --ok: #166534;
       --bad: #b91c1c;
-      --shadow: 0 18px 45px rgba(107, 70, 12, 0.12);
+      --shadow: 0 18px 45px rgba(15, 118, 110, 0.12);
       --radius: 22px;
     }
 
@@ -29,8 +29,9 @@
       font-family: Georgia, "Times New Roman", serif;
       color: var(--ink);
       background:
-        radial-gradient(circle at top left, rgba(180, 83, 9, 0.12), transparent 24rem),
-        linear-gradient(180deg, #fbf6ec 0%, var(--bg) 100%);
+        radial-gradient(circle at top left, rgba(15, 118, 110, 0.18), transparent 24rem),
+        radial-gradient(circle at bottom right, rgba(8, 145, 178, 0.1), transparent 20rem),
+        linear-gradient(180deg, #f2fbf8 0%, var(--bg) 100%);
     }
 
     .shell {
@@ -41,8 +42,8 @@
 
     .hero,
     .card {
-      background: rgba(255, 253, 248, 0.9);
-      border: 1px solid rgba(220, 207, 178, 0.9);
+      background: rgba(249, 255, 253, 0.92);
+      border: 1px solid rgba(184, 216, 205, 0.95);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       backdrop-filter: blur(6px);
@@ -177,7 +178,7 @@
       border: 1px solid var(--line);
       border-radius: 18px;
       overflow: hidden;
-      background: linear-gradient(180deg, rgba(255, 248, 234, 0.8), rgba(255, 255, 255, 0.9));
+      background: linear-gradient(180deg, rgba(215, 243, 234, 0.7), rgba(255, 255, 255, 0.95));
     }
 
     .expert-head {
@@ -209,7 +210,7 @@
     }
 
     th, td {
-      border-bottom: 1px solid #efe6d2;
+      border-bottom: 1px solid #e0f0ea;
       padding: 10px;
       text-align: center;
     }
@@ -219,13 +220,13 @@
       text-align: left;
       position: sticky;
       left: 0;
-      background: #fffcf4;
+      background: #f7fffc;
     }
 
     th {
       font-size: 0.92rem;
       color: var(--muted);
-      background: #fffcf4;
+      background: #f7fffc;
     }
 
     .matrix-input {
@@ -329,7 +330,7 @@
       padding: 10px 12px;
       border-radius: 12px;
       background: rgba(255, 255, 255, 0.6);
-      border: 1px solid #eadfc6;
+      border: 1px solid #d8ebe4;
       font-size: 0.92rem;
     }
 
@@ -389,15 +390,6 @@
         <p class="hint">Skala AHP yang dipakai: 1 sampai 9. Sel diagonal selalu 1, dan sisi bawah matriks dihitung otomatis sebagai nilai kebalikan.</p>
       </section>
 
-      <section class="card">
-        <div class="section-title">
-          <h2>Import / Export</h2>
-          <span class="badge">Portabel</span>
-        </div>
-        <label for="importArea">Tempel JSON hasil export di sini bila ingin memuat ulang data</label>
-        <textarea id="importArea" placeholder='{"expertCount":3,"criteria":["Harga","Kualitas"],"alternatives":["A","B"],"experts":[...]}'></textarea>
-      </section>
-
       <section class="card" id="inputsCard">
         <div class="section-title">
           <h2>Input Penilaian</h2>
@@ -415,6 +407,13 @@
       </section>
     </div>
   </main>
+
+  <textarea
+    id="importArea"
+    aria-hidden="true"
+    tabindex="-1"
+    style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;"
+  ></textarea>
 
   <script>
     const RI = {
@@ -558,8 +557,8 @@
       const startY = 24;
 
       ctx.font = "13px Georgia";
-      ctx.fillStyle = "#6b7280";
-      ctx.strokeStyle = "#eadfc6";
+      ctx.fillStyle = "#5d746d";
+      ctx.strokeStyle = "#d8ebe4";
       ctx.lineWidth = 1;
 
       items.forEach((item, index) => {
@@ -567,17 +566,17 @@
         const trackWidth = width - leftPad - rightPad;
         const barWidth = trackWidth * (item.score / maxScore);
 
-        ctx.fillStyle = "#6b7280";
+        ctx.fillStyle = "#5d746d";
         ctx.fillText("#" + (index + 1), 12, y + 16);
-        ctx.fillStyle = "#1f2937";
+        ctx.fillStyle = "#16332c";
         ctx.fillText(item.name, 38, y + 16);
 
-        ctx.fillStyle = "#f3e4c4";
+        ctx.fillStyle = "#d7f3ea";
         ctx.fillRect(leftPad, y, trackWidth, barHeight);
-        ctx.fillStyle = "#b45309";
+        ctx.fillStyle = "#0f766e";
         ctx.fillRect(leftPad, y, barWidth, barHeight);
 
-        ctx.fillStyle = "#1f2937";
+        ctx.fillStyle = "#16332c";
         ctx.fillText(formatNumber(item.score * 100, 2) + "%", leftPad + trackWidth + 10, y + 16);
       });
     }
