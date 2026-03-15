@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AHP Multi Expert</title>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --panel: #fffdf8;
+      --panel-strong: #fff8ea;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --line: #dccfb2;
+      --accent: #b45309;
+      --accent-soft: #fde7c1;
+      --ok: #166534;
+      --bad: #b91c1c;
+      --shadow: 0 18px 45px rgba(107, 70, 12, 0.12);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(180, 83, 9, 0.12), transparent 24rem),
+        linear-gradient(180deg, #fbf6ec 0%, var(--bg) 100%);
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    .hero,
+    .card {
+      background: rgba(255, 253, 248, 0.9);
+      border: 1px solid rgba(220, 207, 178, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(6px);
+    }
+
+    .hero {
+      padding: 30px;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin-top: 14px;
+      font-size: clamp(2rem, 4vw, 3.3rem);
+      line-height: 1.05;
+    }
+
+    p {
+      margin: 0;
+      line-height: 1.65;
+    }
+
+    .hero p {
+      margin-top: 14px;
+      max-width: 760px;
+      color: var(--muted);
+    }
+
+    .layout {
+      display: grid;
+      gap: 22px;
+    }
+
+    .card {
+      padding: 22px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid.cols-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid.cols-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    input,
+    textarea,
+    select,
+    button {
+      font: inherit;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      background: white;
+      color: var(--ink);
+    }
+
+    textarea {
+      min-height: 108px;
+      resize: vertical;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: white;
+      color: var(--accent);
+      border: 1px solid var(--line);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .expert-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255, 248, 234, 0.8), rgba(255, 255, 255, 0.9));
+    }
+
+    .expert-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .expert-body {
+      padding: 18px;
+      display: grid;
+      gap: 20px;
+    }
+
+    .matrix-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: white;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 540px;
+    }
+
+    th, td {
+      border-bottom: 1px solid #efe6d2;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+      position: sticky;
+      left: 0;
+      background: #fffcf4;
+    }
+
+    th {
+      font-size: 0.92rem;
+      color: var(--muted);
+      background: #fffcf4;
+    }
+
+    .matrix-input {
+      width: 88px;
+      text-align: center;
+      padding: 8px 10px;
+    }
+
+    .readonly-cell {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 0.85rem;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .badge.ok {
+      background: #dcfce7;
+      color: var(--ok);
+    }
+
+    .badge.bad {
+      background: #fee2e2;
+      color: var(--bad);
+    }
+
+    .results-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .result-box {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: var(--panel-strong);
+    }
+
+    .result-box strong {
+      display: block;
+      margin: 8px 0 4px;
+      font-size: 1.12rem;
+    }
+
+    .small {
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 860px) {
+      .grid.cols-2,
+      .grid.cols-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .hero,
+      .card {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <span class="eyebrow">AHP Multi Expert</span>
+      <h1>Sistem Pendukung Keputusan dengan metode AHP yang siap diposting ke GitHub</h1>
+      <p>
+        Aplikasi ini menghitung bobot prioritas kriteria, bobot alternatif per kriteria, rasio konsistensi,
+        dan ranking akhir dari beberapa expert menggunakan agregasi rata-rata geometrik.
+      </p>
+    </section>
+
+    <div class="layout">
+      <section class="card">
+        <div class="section-title">
+          <h2>Konfigurasi Awal</h2>
+          <span class="badge">Static HTML + JS</span>
+        </div>
+        <div class="grid cols-3">
+          <div>
+            <label for="expertCount">Jumlah Expert</label>
+            <input id="expertCount" type="number" min="1" max="10" value="3">
+          </div>
+          <div>
+            <label for="criteriaText">Kriteria, pisahkan dengan koma</label>
+            <input id="criteriaText" type="text" value="Harga, Kualitas, Layanan, Kemudahan">
+          </div>
+          <div>
+            <label for="alternativeText">Alternatif, pisahkan dengan koma</label>
+            <input id="alternativeText" type="text" value="Alternatif A, Alternatif B, Alternatif C">
+          </div>
+        </div>
+        <div class="actions" style="margin-top:16px;">
+          <button class="btn-primary" id="initBtn">Buat Form Penilaian</button>
+          <button class="btn-secondary" id="calcBtn">Hitung Hasil</button>
+          <button class="btn-secondary" id="exportBtn">Export JSON</button>
+          <button class="btn-secondary" id="importBtn">Import JSON</button>
+          <button class="btn-secondary" id="pdfBtn">Cetak / Save PDF</button>
+          <button class="btn-secondary" id="resetBtn">Reset</button>
+        </div>
+        <p class="hint">Skala AHP yang dipakai: 1 sampai 9. Sel diagonal selalu 1, dan sisi bawah matriks dihitung otomatis sebagai nilai kebalikan.</p>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
+          <h2>Import / Export</h2>
+          <span class="badge">Portabel</span>
+        </div>
+        <label for="importArea">Tempel JSON hasil export di sini bila ingin memuat ulang data</label>
+        <textarea id="importArea" placeholder='{"expertCount":3,"criteria":["Harga","Kualitas"],"alternatives":["A","B"],"experts":[...]}'></textarea>
+      </section>
+
+      <section class="card" id="inputsCard">
+        <div class="section-title">
+          <h2>Input Penilaian</h2>
+          <span class="badge">Belum diinisialisasi</span>
+        </div>
+        <div id="expertsContainer" class="grid"></div>
+      </section>
+
+      <section class="card" id="resultsCard">
+        <div class="section-title">
+          <h2>Hasil Perhitungan</h2>
+          <span class="badge">Belum ada hasil</span>
+        </div>
+        <div id="resultsContent" class="small">Klik "Buat Form Penilaian", isi matriks, lalu klik "Hitung Hasil".</div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const RI = {
+      1: 0,
+      2: 0,
+      3: 0.58,
+      4: 0.9,
+      5: 1.12,
+      6: 1.24,
+      7: 1.32,
+      8: 1.41,
+      9: 1.45,
+      10: 1.49
+    };
+
+    const state = {
+      criteria: [],
+      alternatives: [],
+      experts: []
+    };
+
+    const els = {
+      expertCount: document.getElementById("expertCount"),
+      criteriaText: document.getElementById("criteriaText"),
+      alternativeText: document.getElementById("alternativeText"),
+      importArea: document.getElementById("importArea"),
+      expertsContainer: document.getElementById("expertsContainer"),
+      resultsContent: document.getElementById("resultsContent"),
+      inputsCard: document.getElementById("inputsCard"),
+      resultsCard: document.getElementById("resultsCard")
+    };
+
+    function parseList(text, fallback) {
+      return text
+        .split(",")
+        .map(item => item.trim())
+        .filter(Boolean)
+        .map((item, index) => item || fallback + " " + (index + 1));
+    }
+
+    function createMatrix(size) {
+      return Array.from({ length: size }, (_, row) =>
+        Array.from({ length: size }, (_, col) => row === col ? 1 : 1)
+      );
+    }
+
+    function cloneDeep(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function geometricMean(values) {
+      const positives = values.filter(value => Number.isFinite(value) && value > 0);
+      if (!positives.length) {
+        return 1;
+      }
+      const sumLog = positives.reduce((sum, value) => sum + Math.log(value), 0);
+      return Math.exp(sumLog / positives.length);
+    }
+
+    function aggregateMatrices(matrices) {
+      const size = matrices[0].length;
+      return Array.from({ length: size }, (_, row) =>
+        Array.from({ length: size }, (_, col) =>
+          geometricMean(matrices.map(matrix => matrix[row][col]))
+        )
+      );
+    }
+
+    function powerWeights(matrix, iterations = 60) {
+      const size = matrix.length;
+      let weights = Array(size).fill(1 / size);
+      for (let step = 0; step < iterations; step += 1) {
+        const next = matrix.map(row =>
+          row.reduce((sum, value, col) => sum + (value * weights[col]), 0)
+        );
+        const total = next.reduce((sum, value) => sum + value, 0) || 1;
+        weights = next.map(value => value / total);
+      }
+      return weights;
+    }
+
+    function consistencyRatio(matrix) {
+      const size = matrix.length;
+      if (size <= 2) {
+        return 0;
+      }
+      const weights = powerWeights(matrix);
+      const aw = matrix.map(row =>
+        row.reduce((sum, value, col) => sum + (value * weights[col]), 0)
+      );
+      const lambdaMax = aw.reduce((sum, value, index) => sum + (value / (weights[index] || 1e-9)), 0) / size;
+      const ci = (lambdaMax - size) / (size - 1);
+      const ri = RI[size] || 1.49;
+      return ri === 0 ? 0 : ci / ri;
+    }
+
+    function finalScores(criteriaWeights, altWeightsPerCriteria) {
+      return state.alternatives.map((_, altIndex) =>
+        criteriaWeights.reduce((sum, weight, criterionIndex) =>
+          sum + (weight * altWeightsPerCriteria[criterionIndex][altIndex]), 0
+        )
+      );
+    }
+
+    function formatNumber(value, digits = 4) {
+      return Number(value).toFixed(digits);
+    }
+
+    function buildState() {
+      const expertCount = Math.max(1, Math.min(10, Number(els.expertCount.value) || 1));
+      const criteria = parseList(els.criteriaText.value, "Kriteria");
+      const alternatives = parseList(els.alternativeText.value, "Alternatif");
+
+      state.criteria = criteria;
+      state.alternatives = alternatives;
+      state.experts = Array.from({ length: expertCount }, (_, index) => ({
+        name: "Expert " + (index + 1),
+        criteriaMatrix: createMatrix(criteria.length),
+        alternativeMatrices: Array.from({ length: criteria.length }, () => createMatrix(alternatives.length))
+      }));
+    }
+
+    function setBadge(card, text) {
+      const badge = card.querySelector(".badge");
+      badge.textContent = text;
+    }
+
+    function updateMatrix(expertIndex, matrixType, matrixIndex, row, col, rawValue) {
+      const value = Math.max(1 / 9, Math.min(9, Number(rawValue) || 1));
+      const matrix = matrixType === "criteria"
+        ? state.experts[expertIndex].criteriaMatrix
+        : state.experts[expertIndex].alternativeMatrices[matrixIndex];
+      matrix[row][col] = value;
+      matrix[col][row] = 1 / value;
+      renderInputs();
+    }
+
+    function renderMatrix(labels, matrix, onChange) {
+      const wrap = document.createElement("div");
+      wrap.className = "matrix-wrap";
+
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const headRow = document.createElement("tr");
+      const firstHead = document.createElement("th");
+      firstHead.textContent = "Item";
+      headRow.appendChild(firstHead);
+
+      labels.forEach(label => {
+        const th = document.createElement("th");
+        th.textContent = label;
+        headRow.appendChild(th);
+      });
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      labels.forEach((rowLabel, row) => {
+        const tr = document.createElement("tr");
+        const labelCell = document.createElement("td");
+        labelCell.textContent = rowLabel;
+        tr.appendChild(labelCell);
+
+        labels.forEach((_, col) => {
+          const td = document.createElement("td");
+          if (row === col) {
+            td.innerHTML = "<span class='badge'>1</span>";
+          } else if (row < col) {
+            const input = document.createElement("input");
+            input.className = "matrix-input";
+            input.type = "number";
+            input.min = "0.1111";
+            input.max = "9";
+            input.step = "0.1111";
+            input.value = matrix[row][col];
+            input.addEventListener("change", () => onChange(row, col, input.value));
+            td.appendChild(input);
+          } else {
+            td.innerHTML = "<span class='readonly-cell'>" + formatNumber(matrix[row][col], 3) + "</span>";
+          }
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody);
+      wrap.appendChild(table);
+      return wrap;
+    }
+
+    function renderInputs() {
+      els.expertsContainer.innerHTML = "";
+
+      if (!state.experts.length) {
+        els.expertsContainer.innerHTML = "<p class='small'>Belum ada form penilaian.</p>";
+        setBadge(els.inputsCard, "Belum diinisialisasi");
+        return;
+      }
+
+      state.experts.forEach((expert, expertIndex) => {
+        const card = document.createElement("article");
+        card.className = "expert-card";
+
+        const head = document.createElement("div");
+        head.className = "expert-head";
+        head.innerHTML = "<strong>" + expert.name + "</strong><span class='small'>Isi semua matriks perbandingan</span>";
+        card.appendChild(head);
+
+        const body = document.createElement("div");
+        body.className = "expert-body";
+
+        const criteriaBlock = document.createElement("section");
+        criteriaBlock.innerHTML = "<h3>Perbandingan Kriteria</h3>";
+        criteriaBlock.appendChild(renderMatrix(
+          state.criteria,
+          expert.criteriaMatrix,
+          (row, col, value) => updateMatrix(expertIndex, "criteria", null, row, col, value)
+        ));
+        body.appendChild(criteriaBlock);
+
+        state.criteria.forEach((criterion, criterionIndex) => {
+          const altBlock = document.createElement("section");
+          altBlock.innerHTML = "<h3>Alternatif terhadap kriteria: " + criterion + "</h3>";
+          altBlock.appendChild(renderMatrix(
+            state.alternatives,
+            expert.alternativeMatrices[criterionIndex],
+            (row, col, value) => updateMatrix(expertIndex, "alternative", criterionIndex, row, col, value)
+          ));
+          body.appendChild(altBlock);
+        });
+
+        card.appendChild(body);
+        els.expertsContainer.appendChild(card);
+      });
+
+      setBadge(els.inputsCard, state.experts.length + " expert siap dinilai");
+    }
+
+    function renderResults(payload) {
+      const criteriaWeightsHtml = payload.criteriaWeights.map((weight, index) =>
+        "<div class='result-box'><div class='small'>" + state.criteria[index] + "</div><strong>" + formatNumber(weight) + "</strong></div>"
+      ).join("");
+
+      const rankingHtml = payload.ranked.map((item, index) =>
+        "<div class='result-box'><div class='small'>Peringkat #" + (index + 1) + "</div><strong>" + item.name + "</strong><div>Skor: " + formatNumber(item.score) + "</div></div>"
+      ).join("");
+
+      const detailHtml = payload.expertDetails.map(detail => {
+        const weights = detail.criteriaWeights.map((weight, index) =>
+          "<div class='small'>" + state.criteria[index] + ": <strong>" + formatNumber(weight) + "</strong></div>"
+        ).join("");
+
+        const finals = detail.final.map((score, index) =>
+          "<div class='small'>" + state.alternatives[index] + ": <strong>" + formatNumber(score) + "</strong></div>"
+        ).join("");
+
+        const crClass = detail.criteriaCR < 0.1 ? "ok" : "bad";
+        return (
+          "<div class='result-box'>" +
+            "<div style='display:flex;justify-content:space-between;gap:12px;align-items:center;'>" +
+              "<strong style='margin:0;'>" + detail.name + "</strong>" +
+              "<span class='badge " + crClass + "'>CR " + formatNumber(detail.criteriaCR * 100, 2) + "%</span>" +
+            "</div>" +
+            "<div style='margin-top:10px'>" + weights + "</div>" +
+            "<div style='margin-top:12px'>" + finals + "</div>" +
+          "</div>"
+        );
+      }).join("");
+
+      const groupCrClass = payload.criteriaCR < 0.1 ? "ok" : "bad";
+      els.resultsContent.innerHTML =
+        "<h3>Ranking Akhir</h3>" +
+        "<div class='results-grid' style='margin-top:12px;'>" + rankingHtml + "</div>" +
+        "<h3 style='margin-top:22px;'>Bobot Kriteria Grup</h3>" +
+        "<div class='results-grid' style='margin-top:12px;'>" + criteriaWeightsHtml + "</div>" +
+        "<div style='margin-top:22px;'>" +
+          "<span class='badge " + groupCrClass + "'>CR Grup " + formatNumber(payload.criteriaCR * 100, 2) + "%</span>" +
+          "<p class='footer-note'>Hasil dinilai konsisten bila CR kurang dari 10%.</p>" +
+        "</div>" +
+        "<h3 style='margin-top:22px;'>Detail Tiap Expert</h3>" +
+        "<div class='grid' style='margin-top:12px;'>" + detailHtml + "</div>";
+
+      setBadge(els.resultsCard, "Perhitungan selesai");
+    }
+
+    function calculate() {
+      if (!state.experts.length) {
+        alert("Buat form penilaian dulu.");
+        return;
+      }
+
+      const criteriaGroupMatrix = aggregateMatrices(state.experts.map(expert => expert.criteriaMatrix));
+      const criteriaWeights = powerWeights(criteriaGroupMatrix);
+      const criteriaCR = consistencyRatio(criteriaGroupMatrix);
+
+      const altGroupMatrices = state.criteria.map((_, criterionIndex) =>
+        aggregateMatrices(state.experts.map(expert => expert.alternativeMatrices[criterionIndex]))
+      );
+      const altWeightsPerCriteria = altGroupMatrices.map(matrix => powerWeights(matrix));
+      const scores = finalScores(criteriaWeights, altWeightsPerCriteria);
+
+      const expertDetails = state.experts.map(expert => {
+        const ownCriteriaWeights = powerWeights(expert.criteriaMatrix);
+        const ownCriteriaCR = consistencyRatio(expert.criteriaMatrix);
+        const ownAltWeights = expert.alternativeMatrices.map(matrix => powerWeights(matrix));
+        return {
+          name: expert.name,
+          criteriaWeights: ownCriteriaWeights,
+          criteriaCR: ownCriteriaCR,
+          final: finalScores(ownCriteriaWeights, ownAltWeights)
+        };
+      });
+
+      const ranked = state.alternatives
+        .map((name, index) => ({ name, score: scores[index] }))
+        .sort((left, right) => right.score - left.score);
+
+      renderResults({
+        criteriaWeights,
+        criteriaCR,
+        ranked,
+        expertDetails
+      });
+    }
+
+    function exportJson() {
+      if (!state.experts.length) {
+        alert("Belum ada data untuk diexport.");
+        return;
+      }
+
+      const payload = {
+        expertCount: state.experts.length,
+        criteria: cloneDeep(state.criteria),
+        alternatives: cloneDeep(state.alternatives),
+        experts: cloneDeep(state.experts)
+      };
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "ahp-multi-expert.json";
+      link.click();
+      URL.revokeObjectURL(url);
+      els.importArea.value = JSON.stringify(payload, null, 2);
+    }
+
+    function importJson() {
+      try {
+        const parsed = JSON.parse(els.importArea.value);
+        state.criteria = parsed.criteria;
+        state.alternatives = parsed.alternatives;
+        state.experts = parsed.experts;
+        els.expertCount.value = parsed.expertCount || parsed.experts.length;
+        els.criteriaText.value = parsed.criteria.join(", ");
+        els.alternativeText.value = parsed.alternatives.join(", ");
+        renderInputs();
+        els.resultsContent.innerHTML = "<p class='small'>Data berhasil dimuat. Klik \"Hitung Hasil\" untuk memproses ulang.</p>";
+        setBadge(els.resultsCard, "Data berhasil diimport");
+      } catch (error) {
+        alert("JSON import tidak valid.");
+      }
+    }
+
+    function resetApp() {
+      state.criteria = [];
+      state.alternatives = [];
+      state.experts = [];
+      els.expertsContainer.innerHTML = "<p class='small'>Belum ada form penilaian.</p>";
+      els.resultsContent.textContent = "Klik \"Buat Form Penilaian\", isi matriks, lalu klik \"Hitung Hasil\".";
+      setBadge(els.inputsCard, "Belum diinisialisasi");
+      setBadge(els.resultsCard, "Belum ada hasil");
+      els.importArea.value = "";
+    }
+
+    document.getElementById("initBtn").addEventListener("click", () => {
+      buildState();
+      renderInputs();
+      els.resultsContent.innerHTML = "<p class='small'>Form berhasil dibuat. Isi matriks lalu hitung hasil.</p>";
+      setBadge(els.resultsCard, "Menunggu perhitungan");
+    });
+
+    document.getElementById("calcBtn").addEventListener("click", calculate);
+    document.getElementById("exportBtn").addEventListener("click", exportJson);
+    document.getElementById("importBtn").addEventListener("click", importJson);
+    document.getElementById("pdfBtn").addEventListener("click", () => window.print());
+    document.getElementById("resetBtn").addEventListener("click", resetApp);
+
+    resetApp();
+  </script>
+</body>
+</html>
