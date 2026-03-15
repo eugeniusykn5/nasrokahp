@@ -314,38 +314,38 @@
   <div class="container">
     <div class="card">
       <h1>SPK Metode AHP Multi-Expert</h1>
-      <p class="small">Aplikasi ini menghitung bobot kriteria dengan AHP dari beberapa expert (agregasi geometric mean), lalu memberi peringkat alternatif dari nilai performa tiap kriteria.</p>
+      <p class="small">This app calculates criteria weights using AHP from multiple experts (geometric mean aggregation), then ranks alternatives based on their performance across criteria.</p>
     </div>
 
     <div class="card">
-      <h2>1) Konfigurasi</h2>
+      <h2>1) Configuration</h2>
       <div class="grid">
         <div>
-          <label for="goalName">Goal / Tujuan</label>
-          <input id="goalName" type="text" value="Memilih Alternatif Terbaik" />
+          <label for="goalName">Goal</label>
+          <input id="goalName" type="text" value="Select the Best Alternative" />
         </div>
         <div>
-          <label for="expertCount">Jumlah expert (1-10)</label>
+          <label for="expertCount">Number of experts (1-10)</label>
           <input id="expertCount" type="number" min="1" max="10" value="2" />
         </div>
         <div>
-          <label for="criteriaNames">Nama kriteria (pisahkan dengan koma)</label>
-          <input id="criteriaNames" type="text" value="Harga,Kualitas,Layanan" />
+          <label for="criteriaNames">Criteria names (comma-separated)</label>
+          <input id="criteriaNames" type="text" value="Cost,Quality,Service" />
         </div>
         <div>
-          <label for="alternativeNames">Nama alternatif (pisahkan dengan koma)</label>
+          <label for="alternativeNames">Alternative names (comma-separated)</label>
           <input id="alternativeNames" type="text" value="Axway,IBM API Connect,Kong Enterprise" />
         </div>
       </div>
       <div style="margin-top:10px;">
-        <button id="generateBtn">Buat Form AHP</button>
+        <button id="generateBtn">Generate AHP Form</button>
       </div>
       <div class="grid" style="margin-top:10px;">
         <div>
-          <button id="downloadCsvBtn" class="btn-secondary" type="button">Simpan Input ke CSV</button>
+          <button id="downloadCsvBtn" class="btn-secondary" type="button">Save Input to CSV</button>
         </div>
         <div>
-          <button id="uploadCsvBtn" class="btn-secondary" type="button">Upload Data CSV</button>
+          <button id="uploadCsvBtn" class="btn-secondary" type="button">Upload CSV Data</button>
           <input id="uploadCsvInput" type="file" accept=".csv,text/csv" style="display:none;" />
         </div>
       </div>
@@ -515,13 +515,13 @@
     }
 
     function collectDataForCsv() {
-      const goal = String(document.getElementById("goalName").value || "").trim() || "Memilih Alternatif Terbaik";
+      const goal = String(document.getElementById("goalName").value || "").trim() || "Select the Best Alternative";
       const nExperts = Number(document.getElementById("expertCount").value) || state.nExperts;
       const criteria = parseNames(document.getElementById("criteriaNames").value);
       const alternatives = parseNames(document.getElementById("alternativeNames").value);
 
       if (!criteria.length || !alternatives.length || !nExperts) {
-        throw new Error("Konfigurasi belum lengkap.");
+        throw new Error("Configuration is incomplete.");
       }
 
       const lines = [];
@@ -580,7 +580,7 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       } catch (err) {
-        alert(`Gagal membuat CSV: ${err.message}`);
+        alert(`Failed to generate CSV: ${err.message}`);
       }
     }
 
@@ -593,14 +593,14 @@
 
     function importCsvText(text) {
       const rows = parseCsv(text);
-      if (!rows.length) throw new Error("File CSV kosong.");
+      if (!rows.length) throw new Error("CSV file is empty.");
 
       const first = rows[0];
       if (first[0] !== "AHP_MULTI_EXPERT") {
-        throw new Error("Format CSV tidak dikenali.");
+        throw new Error("Unrecognized CSV format.");
       }
 
-      let goal = "Memilih Alternatif Terbaik";
+      let goal = "Select the Best Alternative";
       let experts = 0;
       let criteria = [];
       let alternatives = [];
@@ -618,7 +618,7 @@
       });
 
       if (!experts || criteria.length < 2 || alternatives.length < 2) {
-        throw new Error("Data konfigurasi CSV tidak valid.");
+        throw new Error("Invalid CSV configuration data.");
       }
 
       document.getElementById("goalName").value = goal;
@@ -767,7 +767,7 @@
             const input = document.createElement("input");
             input.type = "text";
             input.value = "1";
-            input.placeholder = "mis. 3 atau 1/3";
+            input.placeholder = "e.g. 3 or 1/3";
             input.dataset.matrix = matrixKey;
             input.dataset.i = i;
             input.dataset.j = j;
@@ -849,21 +849,21 @@
       const nAlternatives = alternatives.length;
 
       if (nCriteria < 2 || nCriteria > 10) {
-        alert("Jumlah kriteria harus 2-10 item dari input nama kriteria.");
+        alert("The number of criteria must be 2-10 items from the criteria input.");
         return;
       }
 
       if (nAlternatives < 2 || nAlternatives > 20) {
-        alert("Jumlah alternatif harus 2-20 item dari input nama alternatif.");
+        alert("The number of alternatives must be 2-20 items from the alternatives input.");
         return;
       }
 
       if (nExperts < 1 || nExperts > 10) {
-        alert("Jumlah expert harus 1-10.");
+        alert("The number of experts must be 1-10.");
         return;
       }
 
-      state.goal = goal || "Memilih Alternatif Terbaik";
+      state.goal = goal || "Select the Best Alternative";
       state.nCriteria = nCriteria;
       state.nAlternatives = nAlternatives;
       state.nExperts = nExperts;
@@ -874,7 +874,7 @@
       scoreSection.style.display = "none";
       resultSection.style.display = "none";
 
-      expertSection.innerHTML = `<h2>2) Input Perbandingan Berpasangan (Grouping per Expert)</h2><p class='small'>Setiap expert mengisi matriks kriteria dan matriks alternatif terhadap tiap kriteria. Isi hanya segitiga atas, nilai kebalikannya otomatis.</p>`;
+      expertSection.innerHTML = `<h2>2) Pairwise Comparison Input (Grouped by Expert)</h2><p class='small'>Each expert fills in the criteria matrix and the alternatives matrix for each criterion. Fill only the upper triangle, reciprocal values are auto-filled.</p>`;
       for (let ex = 0; ex < nExperts; ex++) {
         const expertBlock = document.createElement("div");
         expertBlock.className = "result-box";
@@ -883,24 +883,24 @@
         const critTitle = document.createElement("div");
         critTitle.className = "small";
         critTitle.style.marginBottom = "6px";
-        critTitle.innerHTML = "<strong>Matriks Kriteria</strong>";
+        critTitle.innerHTML = "<strong>Criteria Matrix</strong>";
         expertBlock.appendChild(critTitle);
-        expertBlock.appendChild(buildMatrixTable(`criteria-ex${ex}`, state.criteria, "Kriteria"));
+        expertBlock.appendChild(buildMatrixTable(`criteria-ex${ex}`, state.criteria, "Criterion"));
 
         for (let c = 0; c < state.nCriteria; c++) {
           const altTitle = document.createElement("div");
           altTitle.className = "small";
           altTitle.style.margin = "10px 0 6px 0";
-          altTitle.innerHTML = `<strong>Alternatif terhadap kriteria: ${state.criteria[c]}</strong>`;
+          altTitle.innerHTML = `<strong>Alternatives with respect to criterion: ${state.criteria[c]}</strong>`;
           expertBlock.appendChild(altTitle);
-          expertBlock.appendChild(buildMatrixTable(`alt-c${c}-ex${ex}`, state.alternatives, "Alternatif"));
+          expertBlock.appendChild(buildMatrixTable(`alt-c${c}-ex${ex}`, state.alternatives, "Alternative"));
         }
 
         expertSection.appendChild(expertBlock);
       }
 
       const calcBtn = document.createElement("button");
-      calcBtn.textContent = "Hitung Bobot AHP + Ranking Alternatif";
+      calcBtn.textContent = "Calculate AHP Weights + Alternative Ranking";
       calcBtn.addEventListener("click", calculateAll);
       expertSection.appendChild(calcBtn);
 
@@ -971,16 +971,16 @@
 
     function renderResult(criteriaExpertResults, aggCriteriaResult, altConsistencyByCriterion, ranking, contributionMatrix, finalScores) {
       resultSection.style.display = "block";
-      let html = `<h2>4) Hasil Perhitungan</h2>`;
+      let html = `<h2>4) Calculation Results</h2>`;
 
-      html += `<div class='result-box'><h3>Ringkasan Ranking</h3>`;
+      html += `<div class='result-box'><h3>Ranking Summary</h3>`;
       html += `<div class='summary-grid'>
-        <div class='metric'><span class='label'>Peringkat 1</span><span class='value'>${ranking[0].name}</span></div>
-        <div class='metric'><span class='label'>Skor Akhir</span><span class='value'>${fmtPct(ranking[0].score)}</span></div>
-        <div class='metric'><span class='label'>Jumlah Expert</span><span class='value'>${state.nExperts}</span></div>
+        <div class='metric'><span class='label'>Rank 1</span><span class='value'>${ranking[0].name}</span></div>
+        <div class='metric'><span class='label'>Final Score</span><span class='value'>${fmtPct(ranking[0].score)}</span></div>
+        <div class='metric'><span class='label'>Number of Experts</span><span class='value'>${state.nExperts}</span></div>
       </div>`;
       html += buildRankingBars(ranking);
-      html += `<div class='matrix-wrap'><table><thead><tr><th>Peringkat</th><th>Alternatif</th><th>Skor (Angka)</th><th>Skor (%)</th></tr></thead><tbody>`;
+      html += `<div class='matrix-wrap'><table><thead><tr><th>Rank</th><th>Alternative</th><th>Score (Number)</th><th>Score (%)</th></tr></thead><tbody>`;
       ranking.forEach((item, idx) => {
         html += `<tr><td>${idx + 1}</td><td>${item.name}</td><td>${fmt(item.score)}</td><td>${fmtPct(item.score)}</td></tr>`;
       });
@@ -988,21 +988,21 @@
 
       html += `<div class='result-box'><h3>Visualisasi Hierarki AHP</h3><div id='hierarchyViz' class='hierarchy-viz'></div></div>`;
 
-      html += `<div class='result-box'><h3>Hasil Agregasi Multi-Expert</h3>`;
-      html += `<p><strong>Priorities by criterion (Agregasi)</strong></p>`;
-      html += `<div class='matrix-wrap'><table><thead><tr><th>Kriteria</th><th>Bobot (Angka)</th><th>Bobot (%)</th></tr></thead><tbody>`;
+      html += `<div class='result-box'><h3>Multi-Expert Aggregation Results</h3>`;
+      html += `<p><strong>Priorities by criterion (Aggregation)</strong></p>`;
+      html += `<div class='matrix-wrap'><table><thead><tr><th>Criterion</th><th>Weight (Number)</th><th>Weight (%)</th></tr></thead><tbody>`;
       state.criteria.forEach((c, i) => {
         html += `<tr><td>${c}</td><td>${fmt(aggCriteriaResult.weights[i])}</td><td>${fmtPct(aggCriteriaResult.weights[i])}</td></tr>`;
       });
       html += `</tbody></table></div>`;
-      const statusAgg = aggCriteriaResult.cr <= 0.1 ? `<span class='good'>Konsisten</span>` : `<span class='warn'>Tidak konsisten</span>`;
+      const statusAgg = aggCriteriaResult.cr <= 0.1 ? `<span class='good'>Consistent</span>` : `<span class='warn'>Inconsistent</span>`;
       const aggText = aggCriteriaResult.cr < 0.1
-        ? "Derajat konsistensi agregasi dapat diterima (<10%)."
-        : "Derajat konsistensi agregasi belum dapat diterima (>=10%).";
-      html += `<p class='small'>Consistency Ratio Agregasi: ${fmt(aggCriteriaResult.cr)} (${fmtPct(aggCriteriaResult.cr)}) -> ${statusAgg}</p>`;
+        ? "The aggregation consistency level is acceptable (<10%)."
+        : "The aggregation consistency level is not acceptable (>=10%).";
+      html += `<p class='small'>Aggregation Consistency Ratio: ${fmt(aggCriteriaResult.cr)} (${fmtPct(aggCriteriaResult.cr)}) -> ${statusAgg}</p>`;
       html += `<p class='small'>${aggText}</p>`;
 
-      html += `<p><strong>Priorities by Alternatives (Agregasi)</strong></p>`;
+      html += `<p><strong>Priorities by Alternatives (Aggregation)</strong></p>`;
       html += `<div class='matrix-wrap'><table><thead><tr><th>Crit./Alt.</th>${state.alternatives.map(alt => `<th>${alt}</th>`).join("")}<th>IC</th><th>CR</th></tr></thead><tbody>`;
       state.criteria.forEach((criterion, cIdx) => {
         const aggAltRes = altConsistencyByCriterion[cIdx].aggResult;
@@ -1025,17 +1025,17 @@
       altConsistencyByCriterion.forEach(item => {
         const isAcceptable = item.aggResult.cr < 0.1;
         const consistencyText = isAcceptable
-          ? "Derajat konsistensi agregasi dapat diterima (<10%)."
-          : "Derajat konsistensi agregasi belum dapat diterima (>=10%).";
+          ? "The aggregation consistency level is acceptable (<10%)."
+          : "The aggregation consistency level is not acceptable (>=10%).";
 
-        html += `<p><strong>Priorities by subcriterion (${item.criterionName}) - Agregasi</strong></p>`;
-        html += `<div class='matrix-wrap'><table><thead><tr><th>Alternatif</th><th>Bobot Lokal (Angka)</th><th>Bobot Lokal (%)</th></tr></thead><tbody>`;
+        html += `<p><strong>Priorities by subcriterion (${item.criterionName}) - Aggregation</strong></p>`;
+        html += `<div class='matrix-wrap'><table><thead><tr><th>Alternative</th><th>Local Weight (Number)</th><th>Local Weight (%)</th></tr></thead><tbody>`;
         state.alternatives.forEach((alt, idx) => {
           html += `<tr><td>${alt}</td><td>${fmt(item.aggResult.weights[idx])}</td><td>${fmtPct(item.aggResult.weights[idx])}</td></tr>`;
         });
         html += `</tbody></table></div>`;
-        const altStatus = item.aggResult.cr <= 0.1 ? `<span class='good'>Konsisten</span>` : `<span class='warn'>Tidak konsisten</span>`;
-        html += `<p class='small'>Consistency Ratio Agregasi: ${fmt(item.aggResult.cr)} (${fmtPct(item.aggResult.cr)}) -> ${altStatus}</p>`;
+        const altStatus = item.aggResult.cr <= 0.1 ? `<span class='good'>Consistent</span>` : `<span class='warn'>Inconsistent</span>`;
+        html += `<p class='small'>Aggregation Consistency Ratio: ${fmt(item.aggResult.cr)} (${fmtPct(item.aggResult.cr)}) -> ${altStatus}</p>`;
         html += `<p class='small'>${consistencyText}</p>`;
       });
       html += `</div>`;
@@ -1054,10 +1054,10 @@
         html += `<th>${fmtPct(finalScores[aIdx])}</th>`;
       });
       html += `</tr></tbody></table></div>`;
-      html += `<p class='small'>Ranking dihitung dari penjumlahan nilai kontribusi per kriteria (baris TOTAL).</p>`;
+      html += `<p class='small'>Ranking is calculated from the sum of criterion contribution values (TOTAL row).</p>`;
       html += `</div>`;
 
-      html += `<div class='result-box'><h3>Detail Per Expert</h3>`;
+      html += `<div class='result-box'><h3>Expert Details</h3>`;
       html += `<div class='tab-head'>`;
       for (let ex = 0; ex < state.nExperts; ex++) {
         html += `<button type='button' class='tab-btn' data-target='expert-tab-${ex}'>Expert ${ex + 1}</button>`;
@@ -1065,15 +1065,15 @@
       html += `</div>`;
       for (let ex = 0; ex < state.nExperts; ex++) {
         const critRes = criteriaExpertResults[ex];
-        const critStatus = critRes.cr <= 0.1 ? `<span class='good'>Konsisten</span>` : `<span class='warn'>Tidak konsisten</span>`;
+        const critStatus = critRes.cr <= 0.1 ? `<span class='good'>Consistent</span>` : `<span class='warn'>Inconsistent</span>`;
         const critText = critRes.cr < 0.1
-          ? "Derajat konsistensi dapat diterima (<10%), sehingga proses keputusan dapat dilanjutkan."
-          : "Derajat konsistensi belum dapat diterima (>=10%), sebaiknya penilaian pairwise diulang.";
+          ? "The consistency level is acceptable (<10%), so the decision process can continue."
+          : "The consistency level is not acceptable (>=10%), pairwise assessment should be revised.";
 
         html += `<div class='tab-panel' id='expert-tab-${ex}'>`;
         html += `<h3>Expert ${ex + 1}</h3>`;
         html += `<p><strong>Priorities by criterion</strong></p>`;
-        html += `<div class='matrix-wrap'><table><thead><tr><th>Kriteria</th><th>Bobot (Angka)</th><th>Bobot (%)</th></tr></thead><tbody>`;
+        html += `<div class='matrix-wrap'><table><thead><tr><th>Criterion</th><th>Weight (Number)</th><th>Weight (%)</th></tr></thead><tbody>`;
         state.criteria.forEach((c, i) => {
           html += `<tr><td>${c}</td><td>${fmt(critRes.weights[i])}</td><td>${fmtPct(critRes.weights[i])}</td></tr>`;
         });
@@ -1105,13 +1105,13 @@
 
         state.criteria.forEach((criterionName, cIdx) => {
           const altRes = altConsistencyByCriterion[cIdx].expertResults[ex];
-          const altStatus = altRes.cr <= 0.1 ? `<span class='good'>Konsisten</span>` : `<span class='warn'>Tidak konsisten</span>`;
+          const altStatus = altRes.cr <= 0.1 ? `<span class='good'>Consistent</span>` : `<span class='warn'>Inconsistent</span>`;
           const altText = altRes.cr < 0.1
-            ? "Derajat konsistensi dapat diterima (<10%), sehingga proses keputusan dapat dilanjutkan."
-            : "Derajat konsistensi belum dapat diterima (>=10%), sebaiknya penilaian pairwise diulang.";
+            ? "The consistency level is acceptable (<10%), so the decision process can continue."
+            : "The consistency level is not acceptable (>=10%), pairwise assessment should be revised.";
 
           html += `<p><strong>Priorities by subcriterion (${criterionName})</strong></p>`;
-          html += `<div class='matrix-wrap'><table><thead><tr><th>Alternatif</th><th>Bobot Lokal (Angka)</th><th>Bobot Lokal (%)</th></tr></thead><tbody>`;
+          html += `<div class='matrix-wrap'><table><thead><tr><th>Alternative</th><th>Local Weight (Number)</th><th>Local Weight (%)</th></tr></thead><tbody>`;
           state.alternatives.forEach((alt, idx) => {
             html += `<tr><td>${alt}</td><td>${fmt(altRes.weights[idx])}</td><td>${fmtPct(altRes.weights[idx])}</td></tr>`;
           });
@@ -1138,9 +1138,9 @@
       try {
         const text = await file.text();
         importCsvText(text);
-        alert("Data CSV berhasil dimuat.");
+        alert("CSV data loaded successfully.");
       } catch (err) {
-        alert(`Gagal membaca CSV: ${err.message}`);
+        alert(`Failed to read CSV: ${err.message}`);
       } finally {
         uploadCsvInput.value = "";
       }
