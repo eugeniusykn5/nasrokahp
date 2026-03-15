@@ -1,1014 +1,1310 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AHP Multi Expert</title>
-  <style>
-    :root {
-      --bg: #e8f1fb;
-      --panel: #f8fbff;
-      --panel-strong: #ebf4ff;
-      --ink: #16263d;
-      --muted: #5d6f8c;
-      --line: #bfd2ea;
-      --accent: #1d4ed8;
-      --accent-soft: #dbeafe;
-      --ok: #166534;
-      --bad: #b91c1c;
-      --shadow: 0 18px 45px rgba(29, 78, 216, 0.12);
-      --radius: 22px;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
-      color: var(--ink);
-      background:
-        radial-gradient(circle at top left, rgba(29, 78, 216, 0.18), transparent 24rem),
-        radial-gradient(circle at bottom right, rgba(14, 116, 144, 0.12), transparent 20rem),
-        linear-gradient(180deg, #f4f9ff 0%, var(--bg) 100%);
-    }
-
-    .shell {
-      width: min(1180px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 28px 0 56px;
-    }
-
-    .hero,
-    .card {
-      background: rgba(248, 251, 255, 0.92);
-      border: 1px solid rgba(191, 210, 234, 0.95);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(6px);
-    }
-
-    .hero {
-      padding: 30px;
-      margin-bottom: 22px;
-    }
-
-    .eyebrow {
-      display: inline-block;
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      font-size: 0.9rem;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    h1, h2, h3 {
-      margin: 0;
-      font-weight: 700;
-    }
-
-    h1 {
-      margin-top: 14px;
-      font-size: clamp(2rem, 4vw, 3.3rem);
-      line-height: 1.05;
-    }
-
-    p {
-      margin: 0;
-      line-height: 1.65;
-    }
-
-    .hero p {
-      margin-top: 14px;
-      max-width: 760px;
-      color: var(--muted);
-    }
-
-    .layout {
-      display: grid;
-      gap: 22px;
-    }
-
-    .card {
-      padding: 22px;
-    }
-
-    .grid {
-      display: grid;
-      gap: 16px;
-    }
-
-    .grid.cols-2 {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .grid.cols-3 {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 0.95rem;
-      color: var(--muted);
-    }
-
-    input,
-    textarea,
-    select,
-    button {
-      font: inherit;
-    }
-
-    input,
-    textarea,
-    select {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 12px 14px;
-      background: white;
-      color: var(--ink);
-    }
-
-    textarea {
-      min-height: 108px;
-      resize: vertical;
-    }
-
-    button {
-      border: 0;
-      border-radius: 999px;
-      padding: 12px 18px;
-      cursor: pointer;
-      transition: transform 0.15s ease, opacity 0.15s ease;
-    }
-
-    button:hover {
-      transform: translateY(-1px);
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-    }
-
-    .btn-secondary {
-      background: white;
-      color: var(--accent);
-      border: 1px solid var(--line);
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .tabs-shell {
-      display: grid;
-      gap: 18px;
-    }
-
-    .tabs-nav {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .tab-btn {
-      border: 1px solid var(--line);
-      background: white;
-      color: var(--muted);
-      padding: 10px 16px;
-      border-radius: 999px;
-      font-weight: 700;
-    }
-
-    .tab-btn.active {
-      background: var(--accent);
-      color: white;
-      border-color: var(--accent);
-      box-shadow: 0 10px 24px rgba(29, 78, 216, 0.18);
-    }
-
-    .tab-panel {
-      display: none;
-    }
-
-    .tab-panel.active {
-      display: block;
-    }
-
-    .hint {
-      margin-top: 10px;
-      font-size: 0.92rem;
-      color: var(--muted);
-    }
-
-    .expert-card {
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      overflow: hidden;
-      background: linear-gradient(180deg, rgba(219, 234, 254, 0.75), rgba(255, 255, 255, 0.96));
-    }
-
-    .expert-head {
-      padding: 16px 18px;
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .expert-body {
-      padding: 18px;
-      display: grid;
-      gap: 20px;
-    }
-
-    .matrix-wrap {
-      overflow-x: auto;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: white;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      min-width: 540px;
-    }
-
-    th, td {
-      border-bottom: 1px solid #dfebf8;
-      padding: 10px;
-      text-align: center;
-    }
-
-    th:first-child,
-    td:first-child {
-      text-align: left;
-      position: sticky;
-      left: 0;
-      background: #f7fbff;
-    }
-
-    th {
-      font-size: 0.92rem;
-      color: var(--muted);
-      background: #f7fbff;
-    }
-
-    .matrix-input {
-      width: 88px;
-      text-align: center;
-      padding: 8px 10px;
-    }
-
-    .readonly-cell {
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    .section-title {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 12px;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      padding: 7px 12px;
-      font-size: 0.85rem;
-      background: var(--accent-soft);
-      color: var(--accent);
-    }
-
-    .badge.ok {
-      background: #dcfce7;
-      color: var(--ok);
-    }
-
-    .badge.bad {
-      background: #fee2e2;
-      color: var(--bad);
-    }
-
-    .results-grid {
-      display: grid;
-      gap: 14px;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    }
-
-    .results-split {
-      display: grid;
-      gap: 18px;
-      grid-template-columns: 1.2fr 0.8fr;
-      align-items: start;
-    }
-
-    .result-box {
-      padding: 16px;
-      border-radius: 18px;
-      border: 1px solid var(--line);
-      background: var(--panel-strong);
-    }
-
-    .result-box strong {
-      display: block;
-      margin: 8px 0 4px;
-      font-size: 1.12rem;
-    }
-
-    .small {
-      font-size: 0.92rem;
-      color: var(--muted);
-    }
-
-    .footer-note {
-      margin-top: 18px;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    .chart-card {
-      padding: 16px;
-      border-radius: 18px;
-      border: 1px solid var(--line);
-      background: white;
-    }
-
-    .detail-stack {
-      display: grid;
-      gap: 12px;
-    }
-
-    .expert-summary {
-      display: grid;
-      gap: 14px;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      margin-top: 14px;
-    }
-
-    .expert-block {
-      padding: 14px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.72);
-    }
-
-    .expert-block h4 {
-      margin: 0 0 10px;
-      font-size: 0.96rem;
-      color: var(--accent);
-    }
-
-    .mini-list {
-      display: grid;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .mini-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.6);
-      border: 1px solid #d7e5f5;
-      font-size: 0.92rem;
-    }
-
-    @media (max-width: 860px) {
-      .grid.cols-2,
-      .grid.cols-3,
-      .results-split,
-      .expert-summary {
-        grid-template-columns: 1fr;
-      }
-
-      .hero,
-      .card {
-        padding: 18px;
-      }
-    }
-  </style>
-</head>
-<body>
-  <main class="shell">
-    <section class="hero">
-      <span class="eyebrow">AHP Multi Expert</span>
-      <h1>Sistem Pendukung Keputusan dengan metode AHP yang siap diposting ke GitHub</h1>
-      <p>
-        Aplikasi ini menghitung bobot prioritas kriteria, bobot alternatif per kriteria, rasio konsistensi,
-        dan ranking akhir dari beberapa expert menggunakan agregasi rata-rata geometrik.
-      </p>
-    </section>
-
-    <div class="layout">
-      <section class="card">
-        <div class="section-title">
-          <h2>Konfigurasi Awal</h2>
-          <span class="badge">Static HTML + JS</span>
-        </div>
-        <div class="grid cols-3">
-          <div>
-            <label for="expertCount">Jumlah Expert</label>
-            <input id="expertCount" type="number" min="1" max="10" value="3">
-          </div>
-          <div>
-            <label for="criteriaText">Kriteria, pisahkan dengan koma</label>
-            <input id="criteriaText" type="text" value="Harga, Kualitas, Layanan, Kemudahan">
-          </div>
-          <div>
-            <label for="alternativeText">Alternatif, pisahkan dengan koma</label>
-            <input id="alternativeText" type="text" value="Alternatif A, Alternatif B, Alternatif C">
-          </div>
-        </div>
-        <div class="actions" style="margin-top:16px;">
-          <button class="btn-primary" id="initBtn">Buat Form Penilaian</button>
-          <button class="btn-secondary" id="calcBtn">Hitung Hasil</button>
-          <button class="btn-secondary" id="pdfBtn">Cetak / Save PDF</button>
-          <button class="btn-secondary" id="resetBtn">Reset</button>
-        </div>
-        <p class="hint">Skala AHP yang dipakai: 1 sampai 9. Sel diagonal selalu 1, dan sisi bawah matriks dihitung otomatis sebagai nilai kebalikan.</p>
-      </section>
-
-      <section class="card" id="workspaceCard">
-        <div class="section-title">
-          <h2>Workspace AHP</h2>
-          <span class="badge">Mode interaktif</span>
-        </div>
-        <div class="tabs-shell">
-          <div class="tabs-nav">
-            <button class="tab-btn active" id="tabInputBtn" type="button">Input Penilaian</button>
-            <button class="tab-btn" id="tabResultBtn" type="button">Hasil Perhitungan</button>
-          </div>
-          <div class="tab-panel active" id="inputPanel">
-            <section id="inputsCard">
-              <div class="section-title">
-                <h3>Input Penilaian</h3>
-                <span class="badge">Belum diinisialisasi</span>
-              </div>
-              <div id="expertsContainer" class="grid"></div>
-            </section>
-          </div>
-          <div class="tab-panel" id="resultPanel">
-            <section id="resultsCard">
-              <div class="section-title">
-                <h3>Hasil Perhitungan</h3>
-                <span class="badge">Belum ada hasil</span>
-              </div>
-              <div id="resultsContent" class="small">Klik "Buat Form Penilaian", isi matriks, lalu klik "Hitung Hasil".</div>
-            </section>
-          </div>
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <textarea
-    id="importArea"
-    aria-hidden="true"
-    tabindex="-1"
-    style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;"
-  ></textarea>
-
-  <script>
-    const RI = {
-      1: 0,
-      2: 0,
-      3: 0.58,
-      4: 0.9,
-      5: 1.12,
-      6: 1.24,
-      7: 1.32,
-      8: 1.41,
-      9: 1.45,
-      10: 1.49
-    };
-
-    const state = {
-      criteria: [],
-      alternatives: [],
-      experts: []
-    };
-
-    const els = {
-      expertCount: document.getElementById("expertCount"),
-      criteriaText: document.getElementById("criteriaText"),
-      alternativeText: document.getElementById("alternativeText"),
-      importArea: document.getElementById("importArea"),
-      tabInputBtn: document.getElementById("tabInputBtn"),
-      tabResultBtn: document.getElementById("tabResultBtn"),
-      inputPanel: document.getElementById("inputPanel"),
-      resultPanel: document.getElementById("resultPanel"),
-      expertsContainer: document.getElementById("expertsContainer"),
-      resultsContent: document.getElementById("resultsContent"),
-      inputsCard: document.getElementById("inputsCard"),
-      resultsCard: document.getElementById("resultsCard")
-    };
-
-    function switchTab(tabName) {
-      const isInput = tabName === "input";
-      els.tabInputBtn.classList.toggle("active", isInput);
-      els.tabResultBtn.classList.toggle("active", !isInput);
-      els.inputPanel.classList.toggle("active", isInput);
-      els.resultPanel.classList.toggle("active", !isInput);
-    }
-
-    function parseList(text, fallback) {
-      return text
-        .split(",")
-        .map(item => item.trim())
-        .filter(Boolean)
-        .map((item, index) => item || fallback + " " + (index + 1));
-    }
-
-    function createMatrix(size) {
-      return Array.from({ length: size }, (_, row) =>
-        Array.from({ length: size }, (_, col) => row === col ? 1 : 1)
-      );
-    }
-
-    function cloneDeep(value) {
-      return JSON.parse(JSON.stringify(value));
-    }
-
-    function geometricMean(values) {
-      const positives = values.filter(value => Number.isFinite(value) && value > 0);
-      if (!positives.length) {
-        return 1;
-      }
-      const sumLog = positives.reduce((sum, value) => sum + Math.log(value), 0);
-      return Math.exp(sumLog / positives.length);
-    }
-
-    function aggregateMatrices(matrices) {
-      const size = matrices[0].length;
-      return Array.from({ length: size }, (_, row) =>
-        Array.from({ length: size }, (_, col) =>
-          geometricMean(matrices.map(matrix => matrix[row][col]))
-        )
-      );
-    }
-
-    function normalizeMatrix(matrix) {
-      const size = matrix.length;
-      const colSums = Array(size).fill(0);
-      for (let col = 0; col < size; col += 1) {
-        for (let row = 0; row < size; row += 1) {
-          colSums[col] += matrix[row][col];
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperAHP Multi-Expert V2 (Fixed)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+
+        :root {
+            --bg: #edf4ff;
+            --ink: #12253f;
+            --muted: #5d7290;
+            --line: #c8d9f1;
+            --panel: rgba(255, 255, 255, 0.88);
+            --panel-soft: #f3f8ff;
+            --accent: #1d4ed8;
+            --accent-2: #0ea5e9;
+            --ok: #15803d;
+            --bad: #b91c1c;
         }
-      }
 
-      return matrix.map(row =>
-        row.map((value, col) => value / (colSums[col] || 1))
-      );
-    }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(900px 360px at -10% -10%, rgba(29, 78, 216, 0.22), transparent 55%),
+                radial-gradient(760px 300px at 110% 0%, rgba(14, 165, 233, 0.18), transparent 55%),
+                linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+        }
 
-    function averageRows(matrix) {
-      const size = matrix.length;
-      return matrix.map(row =>
-        row.reduce((sum, value) => sum + value, 0) / (size || 1)
-      );
-    }
+        .panel { display: none; }
+        .panel.active { display: block; }
 
-    function solveAHP(matrix) {
-      const size = matrix.length;
-      const normalized = normalizeMatrix(matrix);
-      const weights = averageRows(normalized);
-      const weightedSum = matrix.map(row =>
-        row.reduce((sum, value, col) => sum + (value * weights[col]), 0)
-      );
-      const lambdaMax = weightedSum.reduce((sum, value, index) =>
-        sum + (value / (weights[index] || 1e-9)), 0
-      ) / size;
-      const ci = size <= 2 ? 0 : (lambdaMax - size) / (size - 1);
-      const ri = RI[size] || 1.49;
+        .card {
+            background: var(--panel) !important;
+            border: 1px solid var(--line) !important;
+            box-shadow: 0 18px 42px rgba(22, 61, 122, 0.12);
+            backdrop-filter: blur(8px);
+        }
 
-      return {
-        normalized,
-        weights,
-        lambdaMax,
-        ci,
-        cr: ri === 0 ? 0 : ci / ri
-      };
-    }
+        header h1 {
+            letter-spacing: -0.02em;
+            background: linear-gradient(95deg, var(--accent) 0%, var(--accent-2) 80%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent !important;
+        }
 
-    function finalScores(criteriaWeights, altWeightsPerCriteria) {
-      return state.alternatives.map((_, altIndex) =>
-        criteriaWeights.reduce((sum, weight, criterionIndex) =>
-          sum + (weight * altWeightsPerCriteria[criterionIndex][altIndex]), 0
-        )
-      );
-    }
+        input, textarea {
+            border-color: var(--line) !important;
+            color: var(--ink) !important;
+            background: #fff !important;
+            border-radius: 0.85rem !important;
+        }
 
-    function drawRankingChart(items) {
-      const existing = document.getElementById("rankingChart");
-      if (!existing) {
-        return;
-      }
-      const canvas = existing;
-      const dpr = window.devicePixelRatio || 1;
-      const width = canvas.clientWidth || 640;
-      const rowHeight = 56;
-      const height = Math.max(220, (items.length * rowHeight) + 34);
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      canvas.style.height = height + "px";
-      const ctx = canvas.getContext("2d");
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, width, height);
+        input:focus, textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
+            border-color: #9ec5ff !important;
+        }
 
-      const maxScore = Math.max(...items.map(item => item.score), 0.0001);
-      const leftPad = 128;
-      const rightPad = 70;
-      const barHeight = 24;
-      const startY = 24;
+        .expert-tab {
+            border: 1px solid var(--line) !important;
+            color: var(--muted);
+            background: #fff;
+            transition: all 0.16s ease;
+        }
 
-      ctx.font = "13px Georgia";
-      ctx.fillStyle = "#5d6f8c";
-      ctx.strokeStyle = "#d7e5f5";
-      ctx.lineWidth = 1;
+        .expert-tab.active {
+            background: linear-gradient(120deg, var(--accent), var(--accent-2));
+            color: white;
+            border-color: transparent !important;
+            box-shadow: 0 10px 24px rgba(29, 78, 216, 0.25);
+        }
 
-      items.forEach((item, index) => {
-        const y = startY + (index * rowHeight);
-        const trackWidth = width - leftPad - rightPad;
-        const barWidth = trackWidth * (item.score / maxScore);
+        .expert-detail-tab {
+            cursor: pointer;
+            padding: 0.45rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid var(--line);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--muted);
+            background: white;
+            transition: all 0.16s ease;
+        }
 
-        ctx.fillStyle = "#5d6f8c";
-        ctx.fillText("#" + (index + 1), 12, y + 16);
-        ctx.fillStyle = "#16263d";
-        ctx.fillText(item.name, 38, y + 16);
+        .expert-detail-tab.active {
+            background: linear-gradient(110deg, var(--accent), var(--accent-2));
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 8px 22px rgba(29, 78, 216, 0.22);
+        }
 
-        ctx.fillStyle = "#dbeafe";
-        ctx.fillRect(leftPad, y, trackWidth, barHeight);
-        ctx.fillStyle = "#1d4ed8";
-        ctx.fillRect(leftPad, y, barWidth, barHeight);
+        .expert-detail-panel { display: none; }
+        .expert-detail-panel.active { display: block; }
 
-        ctx.fillStyle = "#16263d";
-        ctx.fillText(formatNumber(item.score * 100, 2) + "%", leftPad + trackWidth + 10, y + 16);
-      });
-    }
+        #panel-model button,
+        #panel-judgments button,
+        #panel-synthesis button {
+            transition: transform 0.14s ease, box-shadow 0.14s ease, background-color 0.14s ease;
+        }
 
-    function formatNumber(value, digits = 4) {
-      return Number(value).toFixed(digits);
-    }
+        #panel-model button:hover,
+        #panel-judgments button:hover,
+        #panel-synthesis button:hover {
+            transform: translateY(-1px);
+        }
 
-    function buildState() {
-      const expertCount = Math.max(1, Math.min(10, Number(els.expertCount.value) || 1));
-      const criteria = parseList(els.criteriaText.value, "Kriteria");
-      const alternatives = parseList(els.alternativeText.value, "Alternatif");
+        #panel-judgments .bg-white,
+        #panel-synthesis .bg-white {
+            background: #ffffff !important;
+        }
 
-      state.criteria = criteria;
-      state.alternatives = alternatives;
-      state.experts = Array.from({ length: expertCount }, (_, index) => ({
-        name: "Expert " + (index + 1),
-        criteriaMatrix: createMatrix(criteria.length),
-        alternativeMatrices: Array.from({ length: criteria.length }, () => createMatrix(alternatives.length))
-      }));
-    }
+        #panel-judgments .rounded-2xl.border,
+        #panel-synthesis .rounded-2xl.border,
+        #panel-synthesis .rounded-3xl.border {
+            border-color: var(--line) !important;
+        }
 
-    function setBadge(card, text) {
-      const badge = card.querySelector(".badge");
-      badge.textContent = text;
-    }
+        #panel-synthesis .bg-slate-900 {
+            background: linear-gradient(135deg, #102340 0%, #1d4ed8 100%) !important;
+        }
 
-    function updateMatrix(expertIndex, matrixType, matrixIndex, row, col, rawValue) {
-      const value = Math.max(1 / 9, Math.min(9, Number(rawValue) || 1));
-      const matrix = matrixType === "criteria"
-        ? state.experts[expertIndex].criteriaMatrix
-        : state.experts[expertIndex].alternativeMatrices[matrixIndex];
-      matrix[row][col] = value;
-      matrix[col][row] = 1 / value;
-      renderInputs();
-    }
+        #panel-synthesis .text-red-500 { color: var(--bad) !important; }
+        #panel-synthesis .text-emerald-500,
+        #panel-synthesis .text-emerald-600 { color: var(--ok) !important; }
 
-    function renderMatrix(labels, matrix, onChange) {
-      const wrap = document.createElement("div");
-      wrap.className = "matrix-wrap";
+        #panel-synthesis table th,
+        #panel-synthesis table td,
+        #panel-judgments table th,
+        #panel-judgments table td {
+            border-color: #dfebfb !important;
+        }
 
-      const table = document.createElement("table");
-      const thead = document.createElement("thead");
-      const headRow = document.createElement("tr");
-      const firstHead = document.createElement("th");
-      firstHead.textContent = "Item";
-      headRow.appendChild(firstHead);
+        @media (max-width: 768px) {
+            body { background-size: auto; }
+            .card { box-shadow: 0 10px 24px rgba(22, 61, 122, 0.11); }
+        }
+    </style>
+</head>
+<body class="antialiased text-slate-900 pb-20">
 
-      labels.forEach(label => {
-        const th = document.createElement("th");
-        th.textContent = label;
-        headRow.appendChild(th);
-      });
-      thead.appendChild(headRow);
-      table.appendChild(thead);
+    <div class="max-w-6xl mx-auto p-4 md:p-8">
+        <div class="mb-4">
+            <a href="index.html" class="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-indigo-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Kembali
+            </a>
+        </div>
+        <header class="text-center mb-10">
+            <h1 class="text-3xl font-extrabold text-indigo-700">SuperAHP Multi-Expert</h1>
+            <p class="text-slate-500">Penilaian Grup dengan Rata-rata Geometrik</p>
+        </header>
 
-      const tbody = document.createElement("tbody");
-      labels.forEach((rowLabel, row) => {
-        const tr = document.createElement("tr");
-        const labelCell = document.createElement("td");
-        labelCell.textContent = rowLabel;
-        tr.appendChild(labelCell);
+        <section id="panel-model" class="panel active card bg-white p-8 rounded-3xl shadow-sm border">
+            <div class="grid md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block font-bold mb-2">Jumlah Ahli</label>
+                    <input type="number" id="numExperts" min="1" value="2" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-400">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block font-bold mb-2">Kriteria (Pisahkan koma)</label>
+                    <input type="text" id="critList" class="w-full p-3 border rounded-xl" placeholder="Biaya, Kualitas, Jarak">
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block font-bold mb-2">Alternatif (Pisahkan koma)</label>
+                    <input type="text" id="altList" class="w-full p-3 border rounded-xl" placeholder="Produk A, Produk B, Produk C">
+                </div>
+            </div>
 
-        labels.forEach((_, col) => {
-          const td = document.createElement("td");
-          if (row === col) {
-            td.innerHTML = "<span class='badge'>1</span>";
-          } else if (row < col) {
-            const input = document.createElement("input");
-            input.className = "matrix-input";
-            input.type = "number";
-            input.min = "0.1111";
-            input.max = "9";
-            input.step = "0.1111";
-            input.value = matrix[row][col];
-            input.addEventListener("change", () => onChange(row, col, input.value));
-            td.appendChild(input);
-          } else {
-            td.innerHTML = "<span class='readonly-cell'>" + formatNumber(matrix[row][col], 3) + "</span>";
-          }
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
+            <!-- Pilihan metode input -->
+            <div class="mt-8">
+                <p class="font-bold text-slate-700 mb-3">Pilih Metode Input:</p>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <button onclick="initSystem('manual')"
+                        class="flex flex-col items-start gap-2 p-5 rounded-2xl border-2 border-slate-200 hover:border-slate-800 hover:bg-slate-50 transition text-left group">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-slate-200 flex items-center justify-center text-slate-700 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18M10 3v18M14 3v18"/></svg>
+                            </div>
+                            <span class="font-bold text-slate-800">Matriks Manual</span>
+                        </div>
+                        <p class="text-xs text-slate-500">Isi langsung nilai perbandingan berpasangan (a<sub>ij</sub>) pada tabel matriks. Cocok untuk expert yang sudah familiar dengan AHP.</p>
+                    </button>
+                    <button onclick="initSystem('scoring')"
+                        class="flex flex-col items-start gap-2 p-5 rounded-2xl border-2 border-amber-200 hover:border-amber-500 hover:bg-amber-50 transition text-left group">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-amber-100 group-hover:bg-amber-200 flex items-center justify-center text-amber-700 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                            </div>
+                            <span class="font-bold text-amber-700">Scoring Interview</span>
+                        </div>
+                        <p class="text-xs text-slate-500">Expert memberi skor 1–10 per item. Matriks perbandingan dihitung otomatis dari rasio skor. Lebih mudah untuk responden awam.</p>
+                    </button>
+                </div>
+            </div>
 
-      table.appendChild(tbody);
-      wrap.appendChild(table);
-      return wrap;
-    }
+            <div class="mt-4 flex items-center justify-center gap-2 text-sm text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/></svg>
+                Atau langsung
+                <a href="sample_ahp_input.csv" download class="text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-2">download sample CSV</a>
+                lalu import di halaman matriks
+            </div>
+        </section>
 
-    function renderInputs() {
-      els.expertsContainer.innerHTML = "";
+        <section id="panel-judgments" class="panel space-y-6">
+            <!-- Toolbar -->
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex flex-wrap gap-2" id="expertTabs"></div>
+                    <!-- Badge metode aktif -->
+                    <div id="method-badge"></div>
+                </div>
+                <div class="flex flex-wrap gap-2 items-center">
+                    <div id="csv-toolbar" class="flex gap-2">
+                        <button onclick="exportCSV()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-300 bg-white text-slate-600 text-sm font-medium hover:bg-slate-50 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"/></svg>
+                            Export CSV
+                        </button>
+                        <label class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-indigo-300 bg-indigo-50 text-indigo-700 text-sm font-medium hover:bg-indigo-100 transition cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12"/></svg>
+                            Import CSV
+                            <input type="file" accept=".csv" class="hidden" onchange="importCSV(event)">
+                        </label>
+                    </div>
+                    <button onclick="backToModel()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-500 text-sm font-medium hover:bg-slate-50 transition">
+                        Ganti Metode
+                    </button>
+                </div>
+            </div>
 
-      if (!state.experts.length) {
-        els.expertsContainer.innerHTML = "<p class='small'>Belum ada form penilaian.</p>";
-        setBadge(els.inputsCard, "Belum diinisialisasi");
-        return;
-      }
+            <div id="csv-import-msg"></div>
+            <div id="matrixArea" class="space-y-10"></div>
+            <button onclick="calculateGroupResult()" class="w-full bg-emerald-600 text-white py-5 rounded-2xl font-bold text-xl shadow-xl hover:bg-emerald-700">HITUNG HASIL KONSENSUS</button>
+        </section>
 
-      state.experts.forEach((expert, expertIndex) => {
-        const card = document.createElement("article");
-        card.className = "expert-card";
+        <section id="panel-synthesis" class="panel space-y-8">
 
-        const head = document.createElement("div");
-        head.className = "expert-head";
-        head.innerHTML = "<strong>" + expert.name + "</strong><span class='small'>Isi semua matriks perbandingan</span>";
-        card.appendChild(head);
+            <!-- ===== BAGIAN YANG DICETAK KE PDF ===== -->
+            <div id="pdf-content" class="space-y-8">
 
-        const body = document.createElement("div");
-        body.className = "expert-body";
+                <!-- FOOTER URL -->
+                <div class="flex items-center justify-between text-xs text-slate-400 px-1">
+                    <span>SuperAHP Multi-Expert</span>
+                    <a href="https://fendygp.github.io" target="_blank" class="text-indigo-400 hover:text-indigo-600 font-medium">fendygp.github.io</a>
+                </div>
 
-        const criteriaBlock = document.createElement("section");
-        criteriaBlock.innerHTML = "<h3>Perbandingan Kriteria</h3>";
-        criteriaBlock.appendChild(renderMatrix(
-          state.criteria,
-          expert.criteriaMatrix,
-          (row, col, value) => updateMatrix(expertIndex, "criteria", null, row, col, value)
-        ));
-        body.appendChild(criteriaBlock);
+                <!-- HASIL GRUP -->
+                <div id="pdf-section-grup" class="bg-white p-8 rounded-3xl border">
+                    <h2 class="text-xl font-extrabold text-indigo-700 mb-6">Hasil Konsensus Grup</h2>
+                    <div class="grid lg:grid-cols-2 gap-10">
+                        <div>
+                            <h3 class="text-base font-bold mb-4">Peringkat Akhir Alternatif</h3>
+                            <canvas id="groupChart" height="250"></canvas>
+                            <div id="rankTable" class="mt-6"></div>
+                        </div>
+                        <div class="space-y-6">
+                            <div class="bg-slate-900 text-white p-6 rounded-2xl">
+                                <h4 class="font-bold text-indigo-400 mb-4">Bobot Prioritas Kriteria (Grup)</h4>
+                                <div id="critWeights" class="space-y-3"></div>
+                            </div>
+                            <div class="p-6 border rounded-2xl bg-indigo-50">
+                                <h4 class="font-bold text-indigo-900 mb-2">Konsistensi Grup (CR)</h4>
+                                <div id="crValue" class="text-3xl font-black"></div>
+                                <div id="crNote"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        state.criteria.forEach((criterion, criterionIndex) => {
-          const altBlock = document.createElement("section");
-          altBlock.innerHTML = "<h3>Alternatif terhadap kriteria: " + criterion + "</h3>";
-          altBlock.appendChild(renderMatrix(
-            state.alternatives,
-            expert.alternativeMatrices[criterionIndex],
-            (row, col, value) => updateMatrix(expertIndex, "alternative", criterionIndex, row, col, value)
-          ));
-          body.appendChild(altBlock);
-        });
+                <!-- DETAIL PER EXPERT -->
+                <div class="bg-white p-8 rounded-3xl border">
+                    <h2 class="text-xl font-extrabold text-slate-800 mb-2">Detail Perhitungan Per Expert</h2>
+                    <p class="text-slate-500 text-sm mb-6">Bobot prioritas dan nilai konsistensi masing-masing expert untuk setiap kriteria dan alternatif.</p>
 
-        card.appendChild(body);
-        els.expertsContainer.appendChild(card);
-      });
+                    <!-- Tab navigator (hanya tampil di layar, tidak di PDF) -->
+                    <div class="flex flex-wrap gap-2 mb-6 no-print" id="expertDetailTabs"></div>
 
-      setBadge(els.inputsCard, state.experts.length + " expert siap dinilai");
-    }
+                    <!-- Panel konten per expert (semua tampil saat PDF) -->
+                    <div id="expertDetailPanels"></div>
+                </div>
 
-    function renderResults(payload) {
-      const criteriaWeightsHtml = payload.criteriaWeights.map((weight, index) =>
-        "<div class='result-box'><div class='small'>" + state.criteria[index] + "</div><strong>" + formatNumber(weight) + "</strong></div>"
-      ).join("");
+            </div>
+            <!-- ===== AKHIR BAGIAN PDF ===== -->
 
-      const rankingHtml = payload.ranked.map((item, index) =>
-        "<div class='result-box'><div class='small'>Peringkat #" + (index + 1) + "</div><strong>" + item.name + "</strong><div>Skor: " + formatNumber(item.score) + "</div></div>"
-      ).join("");
+            <div class="flex gap-4">
+                <button onclick="exportPDF()" class="flex-1 bg-indigo-700 text-white py-3 rounded-xl font-bold hover:bg-indigo-800 transition flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"/></svg>
+                    Download PDF
+                </button>
+                <button onclick="location.reload()" class="px-6 py-3 rounded-xl border text-slate-500 hover:bg-slate-50 transition font-medium">Mulai Dari Awal</button>
+            </div>
+        </section>
+    </div>
 
-      const groupAltHtml = payload.groupAlternativeDetails.map(detail => {
-        const badgeClass = detail.cr < 0.1 ? "ok" : "bad";
-        const weights = detail.weights.map((weight, index) =>
-          "<div class='mini-row'><span>" + state.alternatives[index] + "</span><strong>" + formatNumber(weight) + "</strong></div>"
-        ).join("");
-        return (
-          "<div class='result-box'>" +
-            "<div style='display:flex;justify-content:space-between;gap:12px;align-items:center;'>" +
-              "<strong style='margin:0;'>" + detail.criterion + "</strong>" +
-              "<span class='badge " + badgeClass + "'>CR " + formatNumber(detail.cr * 100, 2) + "%</span>" +
-            "</div>" +
-            "<div class='mini-list'>" + weights + "</div>" +
-          "</div>"
-        );
-      }).join("");
-
-      const detailHtml = payload.expertDetails.map(detail => {
-        const weights = detail.criteriaWeights.map((weight, index) =>
-          "<div class='mini-row'><span>" + state.criteria[index] + "</span><strong>" + formatNumber(weight) + "</strong></div>"
-        ).join("");
-
-        const finals = detail.final.map((score, index) =>
-          "<div class='mini-row'><span>" + state.alternatives[index] + "</span><strong>" + formatNumber(score) + "</strong></div>"
-        ).join("");
-
-        const altCrs = detail.altDetails.map(item =>
-          "<div class='mini-row'><span>" + item.criterion + "</span><strong>CR " + formatNumber(item.cr * 100, 2) + "%</strong></div>"
-        ).join("");
-
-        const crClass = detail.criteriaCR < 0.1 ? "ok" : "bad";
-        return (
-          "<div class='result-box'>" +
-            "<div style='display:flex;justify-content:space-between;gap:12px;align-items:center;'>" +
-              "<strong style='margin:0;'>" + detail.name + "</strong>" +
-              "<span class='badge " + crClass + "'>CR " + formatNumber(detail.criteriaCR * 100, 2) + "%</span>" +
-            "</div>" +
-            "<div class='expert-summary'>" +
-              "<div class='expert-block'>" +
-                "<h4>Bobot Kriteria</h4>" +
-                "<div class='mini-list' style='margin-top:0'>" + weights + "</div>" +
-              "</div>" +
-              "<div class='expert-block'>" +
-                "<h4>Skor Alternatif</h4>" +
-                "<div class='mini-list' style='margin-top:0'>" + finals + "</div>" +
-              "</div>" +
-              "<div class='expert-block'>" +
-                "<h4>CR Alternatif per Kriteria</h4>" +
-                "<div class='mini-list' style='margin-top:0'>" + altCrs + "</div>" +
-              "</div>" +
-            "</div>" +
-          "</div>"
-        );
-      }).join("");
-
-      const groupCrClass = payload.criteriaCR < 0.1 ? "ok" : "bad";
-      els.resultsContent.innerHTML =
-        "<h3>Ranking Akhir</h3>" +
-        "<div class='results-split' style='margin-top:12px;'>" +
-          "<div class='chart-card'><canvas id='rankingChart' style='width:100%;display:block;'></canvas></div>" +
-          "<div class='detail-stack'>" + rankingHtml + "</div>" +
-        "</div>" +
-        "<h3 style='margin-top:22px;'>Bobot Kriteria Grup</h3>" +
-        "<div class='results-grid' style='margin-top:12px;'>" + criteriaWeightsHtml + "</div>" +
-        "<div style='margin-top:22px;'>" +
-          "<span class='badge " + groupCrClass + "'>CR Grup " + formatNumber(payload.criteriaCR * 100, 2) + "%</span>" +
-          "<p class='footer-note'>Lambda max: " + formatNumber(payload.lambdaMax) + " | CI: " + formatNumber(payload.ci) + "</p>" +
-          "<p class='footer-note'>Hasil dinilai konsisten bila CR kurang dari 10%.</p>" +
-        "</div>" +
-        "<h3 style='margin-top:22px;'>Bobot Alternatif Grup per Kriteria</h3>" +
-        "<div class='grid' style='margin-top:12px;'>" + groupAltHtml + "</div>" +
-        "<h3 style='margin-top:22px;'>Detail Tiap Expert</h3>" +
-        "<div class='grid' style='margin-top:12px;'>" + detailHtml + "</div>";
-
-      setBadge(els.resultsCard, "Perhitungan selesai");
-      drawRankingChart(payload.ranked);
-      switchTab("result");
-    }
-
-    function calculate() {
-      if (!state.experts.length) {
-        alert("Buat form penilaian dulu.");
-        return;
-      }
-
-      const criteriaGroupMatrix = aggregateMatrices(state.experts.map(expert => expert.criteriaMatrix));
-      const criteriaSolution = solveAHP(criteriaGroupMatrix);
-
-      const groupAlternativeDetails = state.criteria.map((criterion, criterionIndex) => {
-        const matrix = aggregateMatrices(state.experts.map(expert => expert.alternativeMatrices[criterionIndex]));
-        const solution = solveAHP(matrix);
-        return {
-          criterion,
-          matrix,
-          weights: solution.weights,
-          cr: solution.cr,
-          lambdaMax: solution.lambdaMax
+    <script>
+        let state = {
+            experts: [], criteria: [], alternatives: [],
+            activeExpertIdx: 0,
+            judgments: {},
+            scores: {},       // skor yang diisi user di mode scoring
+            scoresUser: {},   // flag: key ini diisi user sendiri (bukan backtrack)
+            notes: {},        // catatan/alasan interview per sel (iv_note_c{cIdx}_a{aIdx}_e{eIdx})
+            inputMode: 'manual',
+            calcSource: 'manual'  // 'manual' | 'scoring' — sumber untuk kalkulasi
         };
-      });
+        const RI = [0, 0, 0.58, 0.9, 1.12, 1.24, 1.32, 1.41, 1.45, 1.49];
 
-      const altWeightsPerCriteria = groupAlternativeDetails.map(detail => detail.weights);
-      const scores = finalScores(criteriaSolution.weights, altWeightsPerCriteria);
+        function showPanel(id) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(`panel-${id}`).classList.add('active');
+            window.scrollTo(0, 0);
+        }
 
-      const expertDetails = state.experts.map(expert => {
-        const ownCriteriaSolution = solveAHP(expert.criteriaMatrix);
-        const ownAltDetails = expert.alternativeMatrices.map((matrix, criterionIndex) => {
-          const solution = solveAHP(matrix);
-          return {
-            criterion: state.criteria[criterionIndex],
-            weights: solution.weights,
-            cr: solution.cr,
-            lambdaMax: solution.lambdaMax
-          };
-        });
-        return {
-          name: expert.name,
-          criteriaWeights: ownCriteriaSolution.weights,
-          criteriaCR: ownCriteriaSolution.cr,
-          final: finalScores(ownCriteriaSolution.weights, ownAltDetails.map(detail => detail.weights)),
-          altDetails: ownAltDetails
-        };
-      });
+        function initSystem(mode) {
+            const nExp = parseInt(document.getElementById('numExperts').value);
+            state.criteria = document.getElementById('critList').value.split(',').map(s => s.trim()).filter(s => s);
+            state.alternatives = document.getElementById('altList').value.split(',').map(s => s.trim()).filter(s => s);
+            if (state.criteria.length < 2 || state.alternatives.length < 2) return alert("Kriteria & Alternatif minimal 2!");
+            state.experts = Array.from({length: nExp}, (_, i) => `Expert ${i+1}`);
+            state.inputMode = mode;
+            state.calcSource = mode;  // otomatis ikut metode yang dipilih
+            state.judgments = {};
+            state.scores = {};
+            state.scoresUser = {};
+            state.notes = {};
+            state.activeExpertIdx = 0;
+            renderTabs();
+            renderMethodBadge();
+            renderMatrices();
+            showPanel('judgments');
+        }
 
-      const ranked = state.alternatives
-        .map((name, index) => ({ name, score: scores[index] }))
-        .sort((left, right) => right.score - left.score);
+        function backToModel() {
+            showPanel('model');
+        }
 
-      renderResults({
-        criteriaWeights: criteriaSolution.weights,
-        criteriaCR: criteriaSolution.cr,
-        lambdaMax: criteriaSolution.lambdaMax,
-        ci: criteriaSolution.ci,
-        ranked,
-        expertDetails,
-        groupAlternativeDetails
-      });
-    }
+        function renderMethodBadge() {
+            const badge = document.getElementById('method-badge');
+            const csvToolbar = document.getElementById('csv-toolbar');
+            const expertTabsEl = document.getElementById('expertTabs');
+            if (!badge) return;
+            if (state.inputMode === 'scoring') {
+                badge.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                    Scoring Interview
+                </span>`;
+                if (csvToolbar) csvToolbar.style.display = 'none';
+                if (expertTabsEl) expertTabsEl.style.display = 'none';
+            } else {
+                badge.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18M10 3v18M14 3v18"/></svg>
+                    Matriks Manual
+                </span>`;
+                if (csvToolbar) csvToolbar.style.display = '';
+                if (expertTabsEl) expertTabsEl.style.display = '';
+            }
+        }
 
-    function exportJson() {
-      if (!state.experts.length) {
-        alert("Belum ada data untuk diexport.");
-        return;
-      }
+        function renderTabs() {
+            let html = "";
+            state.experts.forEach((name, i) => {
+                html += `<button onclick="switchExpert(${i})" class="expert-tab px-6 py-2 rounded-full border transition ${i === state.activeExpertIdx ? 'active' : 'bg-white'}">${name}</button>`;
+            });
+            document.getElementById('expertTabs').innerHTML = html;
+        }
 
-      const payload = {
-        expertCount: state.experts.length,
-        criteria: cloneDeep(state.criteria),
-        alternatives: cloneDeep(state.alternatives),
-        experts: cloneDeep(state.experts)
-      };
+        function switchExpert(idx) {
+            state.activeExpertIdx = idx;
+            renderTabs();
+            renderMatrices();
+        }
 
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "ahp-multi-expert.json";
-      link.click();
-      URL.revokeObjectURL(url);
-      els.importArea.value = JSON.stringify(payload, null, 2);
-    }
+        function renderMatrices() {
+            if (state.inputMode === 'scoring') {
+                renderScoringMatrices();
+            } else {
+                renderManualMatrices();
+            }
+        }
 
-    function importJson() {
-      try {
-        const parsed = JSON.parse(els.importArea.value);
-        state.criteria = parsed.criteria;
-        state.alternatives = parsed.alternatives;
-        state.experts = parsed.experts;
-        els.expertCount.value = parsed.expertCount || parsed.experts.length;
-        els.criteriaText.value = parsed.criteria.join(", ");
-        els.alternativeText.value = parsed.alternatives.join(", ");
-        renderInputs();
-        els.resultsContent.innerHTML = "<p class='small'>Data berhasil dimuat. Klik \"Hitung Hasil\" untuk memproses ulang.</p>";
-        setBadge(els.resultsCard, "Data berhasil diimport");
-      } catch (error) {
-        alert("JSON import tidak valid.");
-      }
-    }
+        function renderManualMatrices() {
+            const eIdx = state.activeExpertIdx;
+            let html = `<div class="bg-white p-6 rounded-2xl border shadow-sm">
+                <h3 class="font-bold text-indigo-600 mb-4 uppercase text-sm tracking-widest">${state.experts[eIdx]} : Perbandingan Kriteria</h3>
+                ${createTableHTML(`e${eIdx}_c`, state.criteria)}
+            </div>`;
+            state.criteria.forEach((crit, cI) => {
+                html += `<div class="bg-white p-6 rounded-2xl border shadow-sm">
+                    <h3 class="font-bold text-emerald-600 mb-4 uppercase text-sm tracking-widest">${state.experts[eIdx]} : Alternatif untuk ${crit}</h3>
+                    ${createTableHTML(`e${eIdx}_a${cI}`, state.alternatives)}
+                </div>`;
+            });
+            // Tabel estimasi backtrack di akhir
+            html += `<div class="bg-amber-50 border border-amber-200 rounded-2xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-amber-200 flex items-center gap-2">
+                    <span class="text-amber-600 text-lg">↺</span>
+                    <div>
+                        <h3 class="font-bold text-amber-700 text-sm">Estimasi Skor Interview dari Matriks</h3>
+                        <p class="text-xs text-amber-600 mt-0.5">Skor 0–100 yang konsisten dengan nilai matriks yang diisi. Hanya estimasi — bukan nilai asli interview.</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-slate-700 text-white">
+                                <th class="px-4 py-3 text-left font-semibold border-r border-slate-600">Provider</th>
+                                ${state.criteria.map(c => `<th class="px-4 py-3 text-center font-semibold">${c}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody id="backtrack-table-body-${eIdx}">
+                            <tr><td colspan="${state.criteria.length + 1}" class="px-4 py-3 text-slate-400 text-xs text-center">Isi matriks untuk melihat estimasi skor.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+            document.getElementById('matrixArea').innerHTML = html;
+            backtrackAllScores();
+        }
 
-    function resetApp() {
-      state.criteria = [];
-      state.alternatives = [];
-      state.experts = [];
-      els.expertsContainer.innerHTML = "<p class='small'>Belum ada form penilaian.</p>";
-      els.resultsContent.textContent = "Klik \"Buat Form Penilaian\", isi matriks, lalu klik \"Hitung Hasil\".";
-      setBadge(els.inputsCard, "Belum diinisialisasi");
-      setBadge(els.resultsCard, "Belum ada hasil");
-      els.importArea.value = "";
-      switchTab("input");
-    }
+        // ===== SCORING MODE =====
+        function saveScore(key, val) {
+            state.scores[key] = parseFloat(val) || 1;
+            state.scoresUser[key] = true;  // tandai: ini diisi user, bukan backtrack
+            // Sync hanya key ini ke judgments
+            syncOneScoreToJudgment(key);
+            // Re-render preview
+            const parts = key.split('_');
+            const eIdx = parseInt(parts[0].replace('e',''));
+            if (eIdx !== state.activeExpertIdx) return;
+            updateScorePreview();
+        }
 
-    document.getElementById("initBtn").addEventListener("click", () => {
-      buildState();
-      renderInputs();
-      els.resultsContent.innerHTML = "<p class='small'>Form berhasil dibuat. Isi matriks lalu hitung hasil.</p>";
-      setBadge(els.resultsCard, "Menunggu perhitungan");
-      switchTab("input");
-    });
+        // Sync satu score key ke judgments yang relevan
+        function syncOneScoreToJudgment(key) {
+            const parts = key.split('_');
+            const eIdx = parseInt(parts[0].replace('e', ''));
+            if (parts[1] === 'c') {
+                const i = parseInt(parts[2]);
+                state.criteria.forEach((_, j) => {
+                    if (i === j) return;
+                    const ii = Math.min(i, j), jj = Math.max(i, j);
+                    const sA = state.scores[`e${eIdx}_c_${ii}`] || 1;
+                    const sB = state.scores[`e${eIdx}_c_${jj}`] || 1;
+                    state.judgments[`e${eIdx}_c_${ii}_${jj}`] = sA / sB;
+                });
+            } else {
+                const cIdx = parseInt(parts[1].replace('a', ''));
+                const i = parseInt(parts[2]);
+                state.alternatives.forEach((_, j) => {
+                    if (i === j) return;
+                    const ii = Math.min(i, j), jj = Math.max(i, j);
+                    const sA = state.scores[`e${eIdx}_a${cIdx}_${ii}`] || 1;
+                    const sB = state.scores[`e${eIdx}_a${cIdx}_${jj}`] || 1;
+                    state.judgments[`e${eIdx}_a${cIdx}_${ii}_${jj}`] = sA / sB;
+                });
+            }
+        }
 
-    document.getElementById("calcBtn").addEventListener("click", calculate);
-    document.getElementById("pdfBtn").addEventListener("click", () => window.print());
-    document.getElementById("resetBtn").addEventListener("click", resetApp);
-    els.tabInputBtn.addEventListener("click", () => switchTab("input"));
-    els.tabResultBtn.addEventListener("click", () => switchTab("result"));
+        // Sync semua scores user ke judgments (hanya yang diisi user, bukan backtrack)
+        function syncUserScoresToJudgments() {
+            Object.keys(state.scoresUser).forEach(key => syncOneScoreToJudgment(key));
+        }
 
-    resetApp();
-  </script>
+        // Simpan skor interview (key format: iv_c{cIdx}_a{aIdx}_e{eIdx} atau iv_w{cIdx}_e{eIdx})
+        function saveInterviewScore(key, val) {
+            const v = Math.min(100, Math.max(0, parseFloat(val) || 0));
+            state.scores[key] = v;
+            state.scoresUser[key] = true;
+            syncInterviewToJudgments();
+        }
+
+        // Simpan catatan/alasan interview
+        function saveInterviewNote(key, val) {
+            state.notes[key] = val;
+        }
+
+        // Konversi tabel interview → judgments AHP (semua expert sekaligus)
+        // Key: iv_c{cIdx}_a{aIdx}_e{eIdx} untuk alternatif, iv_w{cIdx}_e{eIdx} untuk bobot kriteria
+        function syncInterviewToJudgments() {
+            state.experts.forEach((_, eIdx) => {
+                // Bobot kriteria
+                state.criteria.forEach((_, i) => {
+                    state.criteria.forEach((_, j) => {
+                        if (i >= j) return;
+                        const wI = state.scores[`iv_w${i}_e${eIdx}`] || 1;
+                        const wJ = state.scores[`iv_w${j}_e${eIdx}`] || 1;
+                        state.judgments[`e${eIdx}_c_${i}_${j}`] = wI / wJ;
+                    });
+                });
+                // Alternatif per kriteria
+                state.criteria.forEach((_, cIdx) => {
+                    state.alternatives.forEach((_, i) => {
+                        state.alternatives.forEach((_, j) => {
+                            if (i >= j) return;
+                            const sI = state.scores[`iv_c${cIdx}_a${i}_e${eIdx}`] || 1;
+                            const sJ = state.scores[`iv_c${cIdx}_a${j}_e${eIdx}`] || 1;
+                            state.judgments[`e${eIdx}_a${cIdx}_${i}_${j}`] = sI / sJ;
+                        });
+                    });
+                });
+            });
+        }
+
+        // Render scoring interview: per kriteria, semua expert dalam satu tabel
+        function renderScoringMatrices() {
+            let html = '';
+
+            // Header instruksi
+            html += `<div class="bg-indigo-50 border border-indigo-200 rounded-2xl px-6 py-4 flex items-start gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-indigo-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/></svg>
+                <div>
+                    <p class="font-semibold text-indigo-800 text-sm">Petunjuk Pengisian Interview Scoring</p>
+                    <p class="text-xs text-indigo-600 mt-1">Isi skor <strong>0–100</strong> untuk setiap alternatif pada masing-masing kriteria. Sertakan <em>alasan singkat</em> kenapa memberi skor tersebut. Bobot kepentingan kriteria diisi di baris <span class="font-bold text-amber-600">Bobot Kriteria</span>.</p>
+                </div>
+            </div>`;
+
+            // Satu tabel per kriteria
+            state.criteria.forEach((crit, cIdx) => {
+                // Warna header berbeda per kriteria
+                const colors = ['bg-indigo-700','bg-emerald-700','bg-violet-700','bg-cyan-700','bg-rose-700','bg-amber-700','bg-teal-700'];
+                const color = colors[cIdx % colors.length];
+
+                // Header kolom expert
+                const expertHeaders = state.experts.map(e =>
+                    `<th class="px-3 py-3 text-center font-semibold min-w-[160px]" colspan="2">${e}</th>`
+                ).join('');
+                const subHeaders = state.experts.map(() =>
+                    `<th class="px-3 py-2 text-center font-normal text-xs opacity-80 border-l border-white/20">Skor (0–100)</th>
+                     <th class="px-3 py-2 text-center font-normal text-xs opacity-80 border-r border-white/20">Alasan</th>`
+                ).join('');
+
+                // Baris alternatif
+                const altRows = state.alternatives.map((alt, aIdx) => {
+                    const expertCells = state.experts.map((_, eIdx) => {
+                        const scoreKey = `iv_c${cIdx}_a${aIdx}_e${eIdx}`;
+                        const noteKey = `iv_note_c${cIdx}_a${aIdx}_e${eIdx}`;
+                        const scoreVal = state.scores[scoreKey] !== undefined ? state.scores[scoreKey] : '';
+                        const noteVal = state.notes[noteKey] || '';
+                        return `<td class="p-1.5 border-l border-slate-200 text-center">
+                            <input type="number" min="0" max="100" step="1" value="${scoreVal}" placeholder="0"
+                                oninput="saveInterviewScore('${scoreKey}', this.value)"
+                                class="w-full p-2 text-center border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-400 font-bold text-sm">
+                        </td>
+                        <td class="p-1.5 border-r border-slate-200">
+                            <input type="text" value="${noteVal}" placeholder="Alasan singkat..."
+                                oninput="saveInterviewNote('${noteKey}', this.value)"
+                                class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-slate-300 text-slate-600 min-w-[120px]">
+                        </td>`;
+                    }).join('');
+                    return `<tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="px-4 py-3 font-semibold text-slate-700 bg-slate-50 whitespace-nowrap border-r border-slate-200 sticky left-0">${alt}</td>
+                        ${expertCells}
+                    </tr>`;
+                }).join('');
+
+                // Baris bobot kriteria
+                const weightCells = state.experts.map((_, eIdx) => {
+                    const key = `iv_w${cIdx}_e${eIdx}`;
+                    const val = state.scores[key] !== undefined ? state.scores[key] : '';
+                    return `<td class="p-1.5 border-l border-amber-300 text-center" colspan="2">
+                        <input type="number" min="0" max="100" step="1" value="${val}" placeholder="0"
+                            oninput="saveInterviewScore('${key}', this.value)"
+                            class="w-full p-2 text-center border border-amber-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-400 font-bold text-sm bg-amber-50 text-amber-700">
+                    </td>`;
+                }).join('');
+
+                html += `<div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b flex items-center gap-3 ${color} text-white">
+                        <span class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold flex-shrink-0">${cIdx + 1}</span>
+                        <div>
+                            <h3 class="font-bold text-base">${crit}</h3>
+                            <p class="text-xs opacity-75 mt-0.5">Penilaian alternatif berdasarkan kriteria <strong>${crit}</strong> — skor 0 (sangat buruk) hingga 100 (sangat baik)</p>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse text-sm">
+                            <thead>
+                                <tr class="text-white text-sm ${color}">
+                                    <th class="px-4 py-2.5 text-left font-semibold border-r border-white/20 sticky left-0 ${color}">Alternatif</th>
+                                    ${expertHeaders}
+                                </tr>
+                                <tr class="${color} text-white border-t border-white/20">
+                                    <th class="px-4 py-1.5 sticky left-0 ${color}"></th>
+                                    ${subHeaders}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${altRows}
+                                <tr class="bg-amber-50 border-t-2 border-amber-300">
+                                    <td class="px-4 py-3 font-bold text-amber-700 border-r border-amber-200 whitespace-nowrap sticky left-0 bg-amber-50">
+                                        Bobot Kriteria
+                                        <span class="block text-xs font-normal text-amber-500">Kepentingan ${crit}</span>
+                                    </td>
+                                    ${weightCells}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            });
+
+            document.getElementById('matrixArea').innerHTML = html;
+        }
+
+        function createTableHTML(prefix, items) {
+            let html = `<div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead><tr class="text-slate-400"><th></th>`;
+            items.forEach(it => html += `<th class="p-2 font-normal">${it}</th>`);
+            html += `</tr></thead><tbody>`;
+            items.forEach((row, i) => {
+                html += `<tr><td class="p-2 font-bold bg-slate-50 w-32">${row}</td>`;
+                items.forEach((col, j) => {
+                    const id = `${prefix}_${i}_${j}`;
+                    if (i === j) html += `<td class="p-2 text-center text-slate-300">1</td>`;
+                    else if (i < j) {
+                        const savedVal = state.judgments[id] || 1;
+                        html += `<td class="p-2"><input type="number" step="0.1" value="${savedVal}" oninput="saveVal('${id}', this.value, '${prefix}_${j}_${i}_inv')" class="w-16 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none font-bold"></td>`;
+                    } else {
+                        const invId = `${prefix}_${j}_${i}`;
+                        const invVal = state.judgments[invId] ? (1 / state.judgments[invId]).toFixed(2) : "1.00";
+                        html += `<td class="p-2 text-center text-slate-400 font-mono text-xs" id="${prefix}_${i}_${j}_inv">${invVal}</td>`;
+                    }
+                });
+                html += `</tr>`;
+            });
+            return html + `</tbody></table></div>`;
+        }
+
+        function saveVal(id, val, invId) {
+            state.judgments[id] = parseFloat(val) || 1;
+            document.getElementById(invId).innerText = (1 / parseFloat(val)).toFixed(2);
+            backtrackAllScores();
+        }
+
+        // Hitung geometric mean per baris → normalisasi ke 0–100, kembalikan array skor
+        function computeBacktrackScores(prefix, items) {
+            const n = items.length;
+            const geoMeans = items.map((_, i) => {
+                let product = 1;
+                items.forEach((_, j) => {
+                    let v;
+                    if (i === j) v = 1;
+                    else if (i < j) v = state.judgments[`${prefix}_${i}_${j}`] || 1;
+                    else v = 1 / (state.judgments[`${prefix}_${j}_${i}`] || 1);
+                    product *= v;
+                });
+                return Math.pow(product, 1 / n);
+            });
+            const minG = Math.min(...geoMeans);
+            const maxG = Math.max(...geoMeans);
+            const range = maxG - minG || 1;
+            return geoMeans.map(g => +(((g - minG) / range) * 100).toFixed(1));
+        }
+
+        // Render tabel estimasi backtrack ke unified table (Provider × Kriteria, 0–100)
+        function backtrackAllScores() {
+            const eIdx = state.activeExpertIdx;
+            const tbody = document.getElementById(`backtrack-table-body-${eIdx}`);
+            if (!tbody) return;
+
+            // Hitung skor bobot kriteria (0–100)
+            const critScores = computeBacktrackScores(`e${eIdx}_c`, state.criteria);
+
+            // Hitung skor alternatif per kriteria
+            const altScores = state.criteria.map((_, cIdx) =>
+                computeBacktrackScores(`e${eIdx}_a${cIdx}`, state.alternatives)
+            );
+
+            // Render baris alternatif
+            let rows = state.alternatives.map((alt, aIdx) => {
+                const cells = state.criteria.map((_, cIdx) => {
+                    const v = altScores[cIdx][aIdx];
+                    const pct = v;
+                    const color = v >= 66 ? 'text-emerald-700' : v >= 33 ? 'text-amber-700' : 'text-rose-600';
+                    return `<td class="px-3 py-2.5 text-center border-r border-slate-100">
+                        <div class="flex flex-col items-center gap-1">
+                            <span class="font-bold text-sm ${color}">${v}</span>
+                            <div class="w-12 bg-slate-100 h-1 rounded-full overflow-hidden">
+                                <div class="h-full bg-amber-400 rounded-full" style="width:${pct}%"></div>
+                            </div>
+                        </div>
+                    </td>`;
+                }).join('');
+                return `<tr class="border-b border-slate-100 hover:bg-white/60">
+                    <td class="px-4 py-2.5 font-semibold text-slate-700 bg-white/40 border-r border-slate-200 whitespace-nowrap sticky left-0">${alt}</td>
+                    ${cells}
+                </tr>`;
+            }).join('');
+
+            // Baris bobot kriteria
+            const weightCells = state.criteria.map((_, cIdx) => {
+                const v = critScores[cIdx];
+                return `<td class="px-3 py-2.5 text-center border-r border-amber-200">
+                    <span class="font-bold text-amber-700">${v}</span>
+                </td>`;
+            }).join('');
+            rows += `<tr class="bg-amber-100 border-t-2 border-amber-300">
+                <td class="px-4 py-2.5 font-bold text-amber-700 border-r border-amber-300 sticky left-0 bg-amber-100 whitespace-nowrap">
+                    Bobot Kriteria
+                    <span class="block text-xs font-normal text-amber-500">(estimasi 0–100)</span>
+                </td>
+                ${weightCells}
+            </tr>`;
+
+            tbody.innerHTML = rows;
+        }
+
+        // Ambil matriks dari judgments manual
+        function getMatrixManual(prefix, size) {
+            let m = Array.from({length: size}, () => Array(size).fill(1));
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    if (i < j) m[i][j] = state.judgments[`${prefix}_${i}_${j}`] || 1;
+                    else if (i > j) m[i][j] = 1 / (state.judgments[`${prefix}_${j}_${i}`] || 1);
+                }
+            }
+            return m;
+        }
+
+        // Ambil matriks dari skor interview (rasio skor_i / skor_j)
+        function getMatrixScoring(prefix, size) {
+            let m = Array.from({length: size}, () => Array(size).fill(1));
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    if (i === j) continue;
+                    const sI = state.scores[`${prefix}_${i}`] || 1;
+                    const sJ = state.scores[`${prefix}_${j}`] || 1;
+                    m[i][j] = sI / sJ;
+                }
+            }
+            return m;
+        }
+
+        // Dispatch ke sumber yang dipilih user
+        // Scoring mode: judgments sudah diisi oleh syncInterviewToJudgments(), gunakan getMatrixManual
+        function getFullMatrix(prefix, size) {
+            return getMatrixManual(prefix, size);
+        }
+
+        function solveAHP(matrix) {
+            const n = matrix.length;
+            let colSums = Array(n).fill(0);
+            for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) colSums[j] += matrix[i][j];
+            let weights = Array(n).fill(0);
+            for (let i = 0; i < n; i++) {
+                let rowSumNorm = 0;
+                for (let j = 0; j < n; j++) rowSumNorm += (matrix[i][j] / colSums[j]);
+                weights[i] = rowSumNorm / n;
+            }
+            let weightedSum = Array(n).fill(0);
+            for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) weightedSum[i] += matrix[i][j] * weights[j];
+            let lambda = 0;
+            for (let i = 0; i < n; i++) lambda += weightedSum[i] / weights[i];
+            lambda /= n;
+            let ci = (lambda - n) / (n - 1 || 1);
+            let cr = ci / (RI[n - 1] || 1);
+            return { weights, cr };
+        }
+
+        // Render tabel matriks perbandingan lengkap
+        function matrixTableHTML(prefix, items) {
+            const n = items.length;
+            let html = `<div class="overflow-x-auto"><table class="w-full text-xs border-collapse">
+                <thead><tr class="bg-slate-100">
+                    <th class="p-1.5 text-left font-semibold text-slate-500">vs</th>`;
+            items.forEach(it => html += `<th class="p-1.5 font-semibold text-slate-500 text-center">${it}</th>`);
+            html += `<th class="p-1.5 font-semibold text-indigo-600 text-center">Bobot</th></tr></thead><tbody>`;
+
+            // Hitung bobot dari matriks untuk ditampilkan di kolom terakhir
+            const mat = getFullMatrix(prefix, n);
+            const { weights } = solveAHP(mat);
+
+            items.forEach((row, i) => {
+                html += `<tr class="border-t border-slate-100 ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}">
+                    <td class="p-1.5 font-semibold text-slate-700">${row}</td>`;
+                items.forEach((_, j) => {
+                    let val, cls = '';
+                    if (i === j) { val = '1.000'; cls = 'text-slate-300'; }
+                    else {
+                        val = mat[i][j] >= 1
+                            ? mat[i][j].toFixed(3)
+                            : mat[i][j].toFixed(3);
+                        cls = mat[i][j] > 1 ? 'text-indigo-600 font-bold' : 'text-slate-400';
+                    }
+                    html += `<td class="p-1.5 text-center font-mono ${cls}">${val}</td>`;
+                });
+                html += `<td class="p-1.5 text-center font-bold text-indigo-700">${(weights[i]*100).toFixed(1)}%</td>`;
+                html += `</tr>`;
+            });
+            return html + `</tbody></table></div>`;
+        }
+
+        // Render tabel bobot ringkas
+        function weightTableHTML(labels, weights, cr, colorClass) {
+            let rows = labels.map((lb, i) => `
+                <tr class="border-b border-slate-100">
+                    <td class="py-1.5 pr-4 text-slate-700">${lb}</td>
+                    <td class="py-1.5 pr-4 text-right font-mono font-bold">${(weights[i] * 100).toFixed(2)}%</td>
+                    <td class="py-1.5">
+                        <div class="w-24 bg-slate-100 h-2 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full ${colorClass}" style="width:${(weights[i]*100).toFixed(1)}%"></div>
+                        </div>
+                    </td>
+                </tr>`).join('');
+            const crColor = cr > 0.1 ? 'text-red-600' : 'text-emerald-600';
+            const crNote = state.calcSource === 'scoring'
+                ? '<span class="text-amber-500 ml-1">(perfectly consistent — dari rasio skor)</span>'
+                : cr > 0.1 ? '<span class="text-red-500">(Tidak Konsisten)</span>' : '<span class="text-emerald-600">(Konsisten)</span>';
+            return `<table class="w-full text-sm mb-2">
+                <thead><tr class="text-slate-400 text-xs uppercase"><th class="text-left pb-1">Item</th><th class="text-right pb-1">Bobot</th><th class="pb-1"></th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+            <p class="text-xs">CR: <span class="font-bold ${crColor}">${(cr * 100).toFixed(2)}%</span> ${crNote}</p>`;
+        }
+
+        function calculateGroupResult() {
+            // Jika scoring, sync semua interview scores ke judgments terlebih dahulu
+            if (state.calcSource === 'scoring') {
+                syncInterviewToJudgments();
+            }
+
+            // Hitung per-expert dulu (simpan untuk ditampilkan)
+            let expertResults = state.experts.map((_, eIdx) => {
+                const critRes = solveAHP(getFullMatrix(`e${eIdx}_c`, state.criteria.length));
+                const altResults = state.criteria.map((_, cIdx) =>
+                    solveAHP(getFullMatrix(`e${eIdx}_a${cIdx}`, state.alternatives.length))
+                );
+                return { critRes, altResults };
+            });
+
+            // Agregasi Matriks Kriteria (Geometric Mean)
+            let aggCritMat = Array.from({length: state.criteria.length}, () => Array(state.criteria.length).fill(1));
+            for (let i = 0; i < state.criteria.length; i++) {
+                for (let j = 0; j < state.criteria.length; j++) {
+                    let product = 1;
+                    for (let e = 0; e < state.experts.length; e++) {
+                        product *= getFullMatrix(`e${e}_c`, state.criteria.length)[i][j];
+                    }
+                    aggCritMat[i][j] = Math.pow(product, 1 / state.experts.length);
+                }
+            }
+            const groupCritRes = solveAHP(aggCritMat);
+
+            // Agregasi Matriks Alternatif per Kriteria
+            let groupAltWeights = [];
+            state.criteria.forEach((_, cIdx) => {
+                let aggAltMat = Array.from({length: state.alternatives.length}, () => Array(state.alternatives.length).fill(1));
+                for (let i = 0; i < state.alternatives.length; i++) {
+                    for (let j = 0; j < state.alternatives.length; j++) {
+                        let product = 1;
+                        for (let e = 0; e < state.experts.length; e++) {
+                            product *= getFullMatrix(`e${e}_a${cIdx}`, state.alternatives.length)[i][j];
+                        }
+                        aggAltMat[i][j] = Math.pow(product, 1 / state.experts.length);
+                    }
+                }
+                groupAltWeights.push(solveAHP(aggAltMat).weights);
+            });
+
+            // Synthesis
+            let finalScores = Array(state.alternatives.length).fill(0);
+            state.alternatives.forEach((_, aI) => {
+                state.criteria.forEach((_, cI) => {
+                    finalScores[aI] += (groupAltWeights[cI][aI] * groupCritRes.weights[cI]);
+                });
+            });
+
+            renderSynthesis(finalScores, groupCritRes.weights, groupCritRes.cr);
+            renderExpertDetails(expertResults);
+            showPanel('synthesis');
+        }
+
+        function renderSynthesis(scores, cW, cr) {
+            const sorted = state.alternatives.map((name, i) => ({ name, score: scores[i] })).sort((a, b) => b.score - a.score);
+
+            const ctx = document.getElementById('groupChart');
+            if (window.myChart) window.myChart.destroy();
+            window.myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sorted.map(d => d.name),
+                    datasets: [{ label: 'Score', data: sorted.map(d => d.score), backgroundColor: '#6366f1', borderRadius: 8 }]
+                },
+                options: { indexAxis: 'y', plugins: { legend: { display: false } } }
+            });
+
+            let table = `<table class="w-full text-sm"><thead><tr class="border-b"><th class="text-left py-2">Rank</th><th class="text-left py-2">Alternatif</th><th class="text-right py-2">Score</th></tr></thead><tbody>`;
+            sorted.forEach((d, i) => {
+                table += `<tr class="border-b"><td class="py-2 font-bold text-indigo-600">#${i+1}</td><td class="py-2">${d.name}</td><td class="py-2 text-right font-mono">${(d.score*100).toFixed(2)}%</td></tr>`;
+            });
+            document.getElementById('rankTable').innerHTML = table + '</tbody></table>';
+
+            let cHtml = "";
+            state.criteria.forEach((c, i) => {
+                cHtml += `<div class="flex justify-between text-xs mb-1"><span>${c}</span><span>${(cW[i]*100).toFixed(1)}%</span></div><div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden mb-3"><div class="bg-indigo-400 h-full" style="width:${cW[i]*100}%"></div></div>`;
+            });
+            document.getElementById('critWeights').innerHTML = cHtml;
+
+            document.getElementById('crValue').innerText = (cr * 100).toFixed(2) + "%";
+            document.getElementById('crValue').className = `text-3xl font-black ${cr > 0.1 ? 'text-red-500' : 'text-emerald-500'}`;
+            const crNote = document.getElementById('crNote');
+            if (state.calcSource === 'scoring') {
+                crNote.innerHTML = `<p class="text-xs text-amber-600 mt-2 italic">* CR = 0% karena matriks dari skor interview selalu perfectly consistent secara matematis (a<sub>ij</sub> = s<sub>i</sub>/s<sub>j</sub>). Untuk mengukur konsistensi judgment, gunakan <strong>Matriks Manual</strong>.</p>`;
+            } else {
+                crNote.innerHTML = `<p class="text-xs text-indigo-700 mt-2 italic">*Hasil dianggap valid jika CR &lt; 10%</p>`;
+            }
+        }
+
+        function renderExpertDetails(expertResults) {
+            // Render tabs
+            let tabsHtml = "";
+            state.experts.forEach((name, i) => {
+                tabsHtml += `<button class="expert-detail-tab ${i === 0 ? 'active' : ''}" onclick="switchDetailTab(${i})">${name}</button>`;
+            });
+            document.getElementById('expertDetailTabs').innerHTML = tabsHtml;
+
+            // Render panels
+            const isScoringMode = state.inputMode === 'scoring';
+            let panelsHtml = "";
+            expertResults.forEach((res, eIdx) => {
+
+                // Skor mentah — hanya tampil jika mode scoring
+                let rawScoreHtml = '';
+                if (isScoringMode) {
+                    // Tabel ringkasan per kriteria (skor + alasan)
+                    let critTables = state.criteria.map((crit, cIdx) => {
+                        const rows = state.alternatives.map((alt, aIdx) => {
+                            const v = state.scores[`iv_c${cIdx}_a${aIdx}_e${eIdx}`];
+                            const note = state.notes[`iv_note_c${cIdx}_a${aIdx}_e${eIdx}`] || '';
+                            return `<tr class="border-b border-slate-100">
+                                <td class="px-3 py-2 font-semibold text-slate-700 bg-slate-50 whitespace-nowrap">${alt}</td>
+                                <td class="px-3 py-2 text-center font-bold ${v !== undefined ? 'text-slate-800' : 'text-slate-300'}">${v !== undefined ? v : '–'}</td>
+                                <td class="px-3 py-2 text-xs text-slate-500 italic">${note || '–'}</td>
+                            </tr>`;
+                        }).join('');
+                        const w = state.scores[`iv_w${cIdx}_e${eIdx}`];
+                        return `<div class="mb-3 rounded-xl border overflow-hidden text-xs">
+                            <div class="bg-slate-700 text-white px-3 py-2 font-semibold flex justify-between">
+                                <span>${crit}</span>
+                                <span class="text-amber-300">Bobot: ${w !== undefined ? w : '–'}</span>
+                            </div>
+                            <table class="w-full border-collapse">
+                                <thead><tr class="bg-slate-100 text-slate-500">
+                                    <th class="px-3 py-1.5 text-left">Alternatif</th>
+                                    <th class="px-3 py-1.5 text-center">Skor</th>
+                                    <th class="px-3 py-1.5 text-left">Alasan</th>
+                                </tr></thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>`;
+                    }).join('');
+
+                    rawScoreHtml = `<div class="mb-6 rounded-2xl border border-amber-200 overflow-hidden">
+                        <div class="bg-amber-50 px-5 py-3 border-b border-amber-200">
+                            <h4 class="font-bold text-amber-700 text-sm">Interview Scores Mentah (0–100)</h4>
+                        </div>
+                        <div class="px-5 py-4">${critTables}</div>
+                    </div>`;
+                }
+
+                panelsHtml += `<div class="expert-detail-panel ${eIdx === 0 ? 'active' : ''}" id="expert-detail-${eIdx}">
+                    <h3 class="font-bold text-slate-700 mb-4 text-sm uppercase tracking-widest">${state.experts[eIdx]}</h3>
+                    ${rawScoreHtml}
+
+                    <!-- Matriks Kriteria -->
+                    <div class="bg-indigo-50 rounded-2xl p-5 mb-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-bold text-indigo-700 text-sm">Matriks Perbandingan Kriteria</h4>
+                            <span class="text-xs text-indigo-500">CR: <strong>${(res.critRes.cr*100).toFixed(2)}%</strong>
+                                ${state.calcSource === 'scoring' ? '<span class="text-amber-500">(scoring)</span>' : res.critRes.cr > 0.1 ? '<span class="text-red-500">⚠ Tidak Konsisten</span>' : '<span class="text-emerald-600">✓ Konsisten</span>'}
+                            </span>
+                        </div>
+                        ${matrixTableHTML(`e${eIdx}_c`, state.criteria)}
+                        <div class="mt-3 border-t border-indigo-100 pt-3">
+                            ${weightTableHTML(state.criteria, res.critRes.weights, res.critRes.cr, 'bg-indigo-500')}
+                        </div>
+                    </div>
+
+                    <!-- Matriks Alternatif per Kriteria -->
+                    <div class="space-y-4">
+                        ${state.criteria.map((crit, cIdx) => `
+                            <div class="bg-emerald-50 rounded-2xl p-5">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="font-bold text-emerald-700 text-sm">Matriks Alternatif &rarr; ${crit}</h4>
+                                    <span class="text-xs text-emerald-600">CR: <strong>${(res.altResults[cIdx].cr*100).toFixed(2)}%</strong>
+                                        ${state.calcSource === 'scoring' ? '<span class="text-amber-500">(scoring)</span>' : res.altResults[cIdx].cr > 0.1 ? '<span class="text-red-500">⚠</span>' : '<span class="text-emerald-600">✓</span>'}
+                                    </span>
+                                </div>
+                                ${matrixTableHTML(`e${eIdx}_a${cIdx}`, state.alternatives)}
+                                <div class="mt-3 border-t border-emerald-100 pt-3">
+                                    ${weightTableHTML(state.alternatives, res.altResults[cIdx].weights, res.altResults[cIdx].cr, 'bg-emerald-500')}
+                                </div>
+                            </div>`).join('')}
+                    </div>
+                </div>`;
+            });
+            document.getElementById('expertDetailPanels').innerHTML = panelsHtml;
+        }
+
+        function switchDetailTab(idx) {
+            document.querySelectorAll('.expert-detail-tab').forEach((btn, i) => {
+                btn.classList.toggle('active', i === idx);
+            });
+            document.querySelectorAll('.expert-detail-panel').forEach((panel, i) => {
+                panel.classList.toggle('active', i === idx);
+            });
+        }
+
+        // ===== CSV EXPORT =====
+        function exportCSV() {
+            let rows = [];
+            // Header metadata
+            rows.push(['#META', 'experts', state.experts.length]);
+            rows.push(['#META', 'criteria', state.criteria.join('|')]);
+            rows.push(['#META', 'alternatives', state.alternatives.join('|')]);
+            rows.push([]);
+
+            state.experts.forEach((expName, eIdx) => {
+                // Kriteria matrix
+                rows.push([`# ${expName} - Perbandingan Kriteria`]);
+                const critHeader = [''].concat(state.criteria);
+                rows.push(critHeader);
+                state.criteria.forEach((rowCrit, i) => {
+                    const row = [rowCrit];
+                    state.criteria.forEach((_, j) => {
+                        if (i === j) row.push(1);
+                        else if (i < j) row.push(state.judgments[`e${eIdx}_c_${i}_${j}`] || 1);
+                        else row.push(''); // inverse — dikosongkan, dihitung saat import
+                    });
+                    rows.push(row);
+                });
+                rows.push([]);
+
+                // Alternatif per kriteria
+                state.criteria.forEach((crit, cIdx) => {
+                    rows.push([`# ${expName} - Alternatif untuk ${crit}`]);
+                    const altHeader = [''].concat(state.alternatives);
+                    rows.push(altHeader);
+                    state.alternatives.forEach((rowAlt, i) => {
+                        const row = [rowAlt];
+                        state.alternatives.forEach((_, j) => {
+                            if (i === j) row.push(1);
+                            else if (i < j) row.push(state.judgments[`e${eIdx}_a${cIdx}_${i}_${j}`] || 1);
+                            else row.push('');
+                        });
+                        rows.push(row);
+                    });
+                    rows.push([]);
+                });
+            });
+
+            const csvContent = rows.map(r => r.map(cell => {
+                const s = String(cell);
+                return s.includes(',') || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s;
+            }).join(',')).join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Data_AHP_Input.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ===== CSV IMPORT =====
+        function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const lines = e.target.result.split('\n').map(l => l.trimEnd());
+                    let newExperts = [], newCriteria = [], newAlternatives = [];
+                    let newJudgments = {};
+                    let currentExpertIdx = -1, currentCritIdx = -1;
+                    let mode = null; // 'crit' | 'alt'
+                    let rowIdx = 0;
+
+                    const parseRow = (line) => {
+                        const cells = [];
+                        let inQuote = false, cur = '';
+                        for (let c of line) {
+                            if (c === '"') { inQuote = !inQuote; }
+                            else if (c === ',' && !inQuote) { cells.push(cur); cur = ''; }
+                            else cur += c;
+                        }
+                        cells.push(cur);
+                        return cells;
+                    };
+
+                    for (let line of lines) {
+                        if (!line.trim()) { rowIdx = 0; continue; }
+                        const cells = parseRow(line);
+
+                        // META
+                        if (cells[0] === '#META') {
+                            if (cells[1] === 'experts') newExperts = Array.from({length: parseInt(cells[2])}, (_, i) => `Expert ${i+1}`);
+                            if (cells[1] === 'criteria') newCriteria = cells[2].split('|').map(s => s.trim());
+                            if (cells[1] === 'alternatives') newAlternatives = cells[2].split('|').map(s => s.trim());
+                            continue;
+                        }
+
+                        // Section header
+                        if (cells[0].startsWith('#')) {
+                            const header = cells[0];
+                            rowIdx = 0;
+                            // Detect expert index
+                            const expMatch = header.match(/Expert (\d+)/);
+                            if (expMatch) currentExpertIdx = parseInt(expMatch[1]) - 1;
+
+                            if (header.includes('Perbandingan Kriteria')) {
+                                mode = 'crit'; currentCritIdx = -1;
+                            } else if (header.includes('Alternatif untuk')) {
+                                mode = 'alt';
+                                const critName = header.split('Alternatif untuk ')[1].trim();
+                                currentCritIdx = newCriteria.indexOf(critName);
+                            }
+                            continue;
+                        }
+
+                        rowIdx++;
+                        if (rowIdx === 1) continue; // header row (labels)
+
+                        const dataRowIdx = rowIdx - 2; // 0-based row of matrix
+                        if (mode === 'crit') {
+                            cells.slice(1).forEach((val, j) => {
+                                if (j > dataRowIdx && val !== '' && val !== undefined) {
+                                    const key = `e${currentExpertIdx}_c_${dataRowIdx}_${j}`;
+                                    newJudgments[key] = parseFloat(val) || 1;
+                                }
+                            });
+                        } else if (mode === 'alt' && currentCritIdx >= 0) {
+                            cells.slice(1).forEach((val, j) => {
+                                if (j > dataRowIdx && val !== '' && val !== undefined) {
+                                    const key = `e${currentExpertIdx}_a${currentCritIdx}_${dataRowIdx}_${j}`;
+                                    newJudgments[key] = parseFloat(val) || 1;
+                                }
+                            });
+                        }
+                    }
+
+                    if (!newCriteria.length || !newAlternatives.length || !newExperts.length) {
+                        throw new Error("Format CSV tidak valid atau data tidak lengkap.");
+                    }
+
+                    // Terapkan ke state
+                    state.experts = newExperts;
+                    state.criteria = newCriteria;
+                    state.alternatives = newAlternatives;
+                    state.judgments = newJudgments;
+                    state.activeExpertIdx = 0;
+                    // CSV import selalu pakai mode manual
+                    state.inputMode = 'manual';
+                    state.calcSource = 'manual';
+
+                    showPanel('judgments');
+                    renderTabs();
+                    renderMethodBadge();
+                    renderMatrices();
+
+                    document.getElementById('csv-import-msg').innerHTML = `
+                        <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            CSV berhasil diimport: ${newExperts.length} expert, ${newCriteria.length} kriteria, ${newAlternatives.length} alternatif.
+                        </div>`;
+                    setTimeout(() => document.getElementById('csv-import-msg').innerHTML = '', 4000);
+
+                } catch (err) {
+                    document.getElementById('csv-import-msg').innerHTML = `
+                        <div class="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            Gagal import: ${err.message}
+                        </div>`;
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        // Capture satu elemen DOM menjadi satu atau lebih halaman PDF
+        async function captureElementToPages(doc, el, margin) {
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const footerH = 8;
+            const usableH = pageHeight - margin * 2 - footerH;
+            const imgWidth = pageWidth - margin * 2;
+
+            const canvas = await html2canvas(el, { scale: 1.2, useCORS: true, backgroundColor: '#ffffff' });
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let remain = imgHeight;
+
+            while (remain > 0) {
+                const sliceH = Math.min(remain, usableH);
+                const srcY = (imgHeight - remain) * (canvas.height / imgHeight);
+                const srcH = sliceH * (canvas.height / imgHeight);
+
+                const slice = document.createElement('canvas');
+                slice.width = canvas.width;
+                slice.height = srcH;
+                slice.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+
+                doc.addPage();
+                doc.addImage(slice.toDataURL('image/jpeg', 0.75), 'JPEG', margin, margin, imgWidth, sliceH);
+
+                // Footer URL di setiap halaman
+                doc.setFontSize(7);
+                doc.setTextColor(180, 180, 180);
+                doc.text('fendygp.github.io', pageWidth / 2, pageHeight - 4, { align: 'center' });
+                doc.setTextColor(0, 0, 0);
+
+                remain -= sliceH;
+            }
+        }
+
+        async function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const margin = 10;
+            const pageWidth = doc.internal.pageSize.getWidth();
+
+            // Helper: tambahkan halaman judul teks
+            const addSectionTitle = (title, subtitle = '') => {
+                doc.addPage();
+                doc.setFillColor(79, 70, 229);
+                doc.rect(0, 0, pageWidth, 20, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(13);
+                doc.setFont(undefined, 'bold');
+                doc.text(title, margin, 13);
+                if (subtitle) {
+                    doc.setFontSize(9);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(subtitle, margin, 18);
+                }
+                doc.setTextColor(0, 0, 0);
+            };
+
+            // ---- Halaman cover ----
+            // Halaman pertama kosong — jsPDF selalu buat 1 halaman, kita pakai sebagai cover
+            doc.setFillColor(79, 70, 229);
+            doc.rect(0, 0, pageWidth, 60, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(20);
+            doc.setFont(undefined, 'bold');
+            doc.text('Laporan AHP Multi-Expert', margin, 30);
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'normal');
+            doc.text('Penilaian Grup dengan Rata-rata Geometrik', margin, 42);
+            doc.setFontSize(9);
+            doc.text(`Dicetak: ${new Date().toLocaleDateString('id-ID', {day:'2-digit',month:'long',year:'numeric'})}`, margin, 54);
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.text(`Expert     : ${state.experts.length} orang`, margin, 75);
+            doc.text(`Kriteria   : ${state.criteria.join(', ')}`, margin, 84);
+            doc.text(`Alternatif : ${state.alternatives.join(', ')}`, margin, 93);
+            doc.text(`Sumber data: ${state.calcSource === 'scoring' ? 'Scoring Interview' : 'Matriks Manual'}`, margin, 102);
+
+            // URL di cover
+            const pageHeight = doc.internal.pageSize.getHeight();
+            doc.setFontSize(8);
+            doc.setTextColor(150, 150, 150);
+            doc.text('fendygp.github.io', pageWidth / 2, pageHeight - 8, { align: 'center' });
+
+            // ---- Halaman Resume Grup ----
+            addSectionTitle('Hasil Konsensus Grup', 'Peringkat akhir & bobot kriteria gabungan semua expert');
+            const groupEl = document.getElementById('pdf-section-grup');
+            await captureElementToPages(doc, groupEl, margin);
+
+            // ---- Halaman per Expert ----
+            document.getElementById('expertDetailTabs').style.display = 'none';
+
+            for (let eIdx = 0; eIdx < state.experts.length; eIdx++) {
+                addSectionTitle(
+                    `Detail: ${state.experts[eIdx]}`,
+                    `Matriks perbandingan & bobot — ${state.experts[eIdx]}`
+                );
+
+                const panelEl = document.getElementById(`expert-detail-${eIdx}`);
+
+                // Paksa semua overflow-x-auto jadi visible saat capture agar tabel tidak terpotong
+                const overflowEls = panelEl.querySelectorAll('.overflow-x-auto');
+                overflowEls.forEach(el => { el.style.overflow = 'visible'; });
+                panelEl.style.display = 'block';
+
+                await captureElementToPages(doc, panelEl, margin);
+
+                // Kembalikan
+                overflowEls.forEach(el => { el.style.overflow = ''; });
+                panelEl.style.display = eIdx === 0 ? 'block' : 'none';
+            }
+
+            // Kembalikan tab
+            document.getElementById('expertDetailTabs').style.display = '';
+
+            // Hapus halaman kosong pertama yang auto-dibuat jsPDF jika kita sudah addPage
+            // jsPDF v2: halaman 1 sudah kita pakai sebagai cover, tidak perlu dihapus
+            doc.save('Laporan_AHP_Multi_Expert.pdf');
+        }
+    </script>
 </body>
 </html>
