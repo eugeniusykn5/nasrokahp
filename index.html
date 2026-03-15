@@ -308,6 +308,77 @@
       text-align: left;
       margin-left: 4px;
     }
+
+    .group-cr-wrap {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: #f9fcfa;
+    }
+
+    .group-cr-title {
+      text-align: center;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #234936;
+    }
+
+    .group-cr-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .group-cr-card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px;
+      background: #fff;
+    }
+
+    .group-cr-card h4 {
+      margin: 0 0 6px 0;
+      font-size: 0.92rem;
+      color: #2b4738;
+    }
+
+    .group-cr-circle {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px solid #72a0db;
+      display: grid;
+      place-items: center;
+      margin: 8px auto 0 auto;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #24598e;
+      background: #eef5ff;
+    }
+
+    .group-cr-final {
+      border: 2px solid #5b8fd9;
+      border-radius: 12px;
+      text-align: center;
+      padding: 10px;
+      background: #eaf3ff;
+      margin-bottom: 10px;
+    }
+
+    .group-cr-final .big {
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: #1f5da8;
+      line-height: 1.2;
+    }
+
+    .group-cr-validity {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+    }
   </style>
 </head>
 <body>
@@ -985,6 +1056,56 @@
         html += `<tr><td>${idx + 1}</td><td>${item.name}</td><td>${fmt(item.score)}</td><td>${fmtPct(item.score)}</td></tr>`;
       });
       html += `</tbody></table></div></div>`;
+
+      const groupCriteriaConsistent = aggCriteriaResult.cr < 0.1;
+      const subCrValues = altConsistencyByCriterion.map(item => item.aggResult.cr);
+      const avgSubCr = subCrValues.length ? subCrValues.reduce((a, b) => a + b, 0) / subCrValues.length : 0;
+      const maxSubCr = subCrValues.length ? Math.max(...subCrValues) : 0;
+      const groupSubConsistent = maxSubCr < 0.1;
+      const groupOverallConsistent = groupCriteriaConsistent && groupSubConsistent;
+      const expertCriteriaCRs = criteriaExpertResults.map(x => x.cr);
+      const expertCriteriaAvgCR = expertCriteriaCRs.length
+        ? expertCriteriaCRs.reduce((a, b) => a + b, 0) / expertCriteriaCRs.length
+        : 0;
+
+      html += `<div class='result-box'><h3>Group Consistency Summary</h3>`;
+      html += `<div class='group-cr-wrap'>`;
+      html += `<div class='group-cr-title'>Group Consistency Ratio (CR) = ${fmtPct(aggCriteriaResult.cr)}</div>`;
+      html += `<div class='group-cr-row'>`;
+      criteriaExpertResults.forEach((res, idx) => {
+        html += `
+          <div class='group-cr-card'>
+            <h4>Expert ${idx + 1}</h4>
+            <div class='small'>Pairwise Comparison Matrix (${state.nCriteria} criteria)</div>
+            <div class='small'>${state.criteria.join(", ")}</div>
+            <div class='group-cr-circle'>${fmtPct(res.cr)}</div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+      html += `
+        <div class='group-cr-card' style='text-align:center;margin-bottom:10px;'>
+          <h4>Group Aggregation (Arithmetic Mean)</h4>
+          <div class='small'>(${expertCriteriaCRs.map(v => fmtPct(v)).join(" + ")}) / ${Math.max(expertCriteriaCRs.length, 1)} = ${fmtPct(expertCriteriaAvgCR)}</div>
+          <div class='small'>Reference (AHP aggregation matrix): ${fmtPct(aggCriteriaResult.cr)}</div>
+        </div>
+      `;
+      html += `
+        <div class='group-cr-final'>
+          <div style='font-weight:700;'>GROUP CONSISTENCY RATIO</div>
+          <div class='big'>${fmtPct(aggCriteriaResult.cr)}</div>
+        </div>
+      `;
+      html += `<div class='group-cr-validity'>`;
+      html += `<p class='small'>Validity Check</p>`;
+      html += `<p class='small'>Criteria CR threshold (AHP): <strong>&lt; 10%</strong> (${groupCriteriaConsistent ? "<span class='good'>Acceptable</span>" : "<span class='warn'>Not acceptable</span>"})</p>`;
+      html += `<p class='small'>Group CR (Aggregation): <strong>${fmtPct(aggCriteriaResult.cr)}</strong> -> ${groupCriteriaConsistent ? "<span class='good'>VALID</span>" : "<span class='warn'>REVIEW NEEDED</span>"}</p>`;
+      html += `<p class='small'>Subcriteria CR max (Aggregation): <strong>${fmtPct(maxSubCr)}</strong> -> ${groupSubConsistent ? "<span class='good'>Acceptable</span>" : "<span class='warn'>Not acceptable</span>"}</p>`;
+      html += `<p class='small'>Interpretation: ${groupOverallConsistent ? "Expert assessments are consistent and ranking is reliable." : "Some assessments are inconsistent; ranking should be interpreted carefully."}</p>`;
+      html += `</div>`;
+      html += `</div>`;
+      html += `<p class='small'>Additional stats: Subcriteria CR Avg = <strong>${fmtPct(avgSubCr)}</strong>, Subcriteria CR Max = <strong>${fmtPct(maxSubCr)}</strong>.</p>`;
+      html += `</div>`;
 
       html += `<div class='result-box'><h3>AHP Hierarchy Visualization</h3><div id='hierarchyViz' class='hierarchy-viz'></div></div>`;
 
