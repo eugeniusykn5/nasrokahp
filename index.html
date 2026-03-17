@@ -396,8 +396,8 @@
           <input id="goalName" type="text" value="Select the Best Alternative" />
         </div>
         <div>
-          <label for="expertCount">Number of experts (1-10)</label>
-          <input id="expertCount" type="number" min="1" max="10" value="2" />
+          <label for="expertCount">Number of experts (>=1)</label>
+          <input id="expertCount" type="number" min="1" value="2" />
         </div>
         <div>
           <label for="criteriaNames">Criteria names (comma-separated)</label>
@@ -929,8 +929,8 @@
         return;
       }
 
-      if (nExperts < 1 || nExperts > 10) {
-        alert("The number of experts must be 1-10.");
+      if (nExperts < 1) {
+        alert("The number of experts must be at least 1.");
         return;
       }
 
