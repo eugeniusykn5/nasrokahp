@@ -1059,14 +1059,18 @@
 
       const groupCriteriaConsistent = aggCriteriaResult.cr < 0.1;
       const subCrValues = altConsistencyByCriterion.map(item => item.aggResult.cr);
-      const avgSubCr = subCrValues.length ? subCrValues.reduce((a, b) => a + b, 0) / subCrValues.length : 0;
+      const gm = (values) => {
+        if (!values.length) return 0;
+        if (values.some(v => v === 0)) return 0;
+        const logSum = values.reduce((sum, v) => sum + Math.log(v), 0);
+        return Math.exp(logSum / values.length);
+      };
+      const gmSubCr = gm(subCrValues);
       const maxSubCr = subCrValues.length ? Math.max(...subCrValues) : 0;
       const groupSubConsistent = maxSubCr < 0.1;
       const groupOverallConsistent = groupCriteriaConsistent && groupSubConsistent;
       const expertCriteriaCRs = criteriaExpertResults.map(x => x.cr);
-      const expertCriteriaAvgCR = expertCriteriaCRs.length
-        ? expertCriteriaCRs.reduce((a, b) => a + b, 0) / expertCriteriaCRs.length
-        : 0;
+      const expertCriteriaGmCR = gm(expertCriteriaCRs);
 
       html += `<div class='result-box'><h3>Group Consistency Summary</h3>`;
       html += `<div class='group-cr-wrap'>`;
@@ -1085,8 +1089,8 @@
       html += `</div>`;
       html += `
         <div class='group-cr-card' style='text-align:center;margin-bottom:10px;'>
-          <h4>Group Aggregation (Arithmetic Mean)</h4>
-          <div class='small'>(${expertCriteriaCRs.map(v => fmtPct(v)).join(" + ")}) / ${Math.max(expertCriteriaCRs.length, 1)} = ${fmtPct(expertCriteriaAvgCR)}</div>
+          <h4>Group Aggregation (Geometric Mean)</h4>
+          <div class='small'>GM(${expertCriteriaCRs.map(v => fmtPct(v)).join(", ")}) = ${fmtPct(expertCriteriaGmCR)}</div>
           <div class='small'>Reference (AHP aggregation matrix): ${fmtPct(aggCriteriaResult.cr)}</div>
         </div>
       `;
@@ -1104,7 +1108,7 @@
       html += `<p class='small'>Interpretation: ${groupOverallConsistent ? "Expert assessments are consistent and ranking is reliable." : "Some assessments are inconsistent; ranking should be interpreted carefully."}</p>`;
       html += `</div>`;
       html += `</div>`;
-      html += `<p class='small'>Additional stats: Subcriteria CR Avg = <strong>${fmtPct(avgSubCr)}</strong>, Subcriteria CR Max = <strong>${fmtPct(maxSubCr)}</strong>.</p>`;
+      html += `<p class='small'>Additional stats: Subcriteria CR Geometric Mean = <strong>${fmtPct(gmSubCr)}</strong>, Subcriteria CR Max = <strong>${fmtPct(maxSubCr)}</strong>.</p>`;
       html += `</div>`;
 
       html += `<div class='result-box'><h3>AHP Hierarchy Visualization</h3><div id='hierarchyViz' class='hierarchy-viz'></div></div>`;
